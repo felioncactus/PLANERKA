@@ -1,8 +1,8 @@
 import path from "path";
 
 const MIME_BY_EXT = new Map([
-  [".jpg", new Set(["image/jpeg"])],
-  [".jpeg", new Set(["image/jpeg"])],
+  [".jpg", new Set(["image/jpeg", "image/pjpeg"])],
+  [".jpeg", new Set(["image/jpeg", "image/pjpeg"])],
   [".png", new Set(["image/png"])],
   [".webp", new Set(["image/webp"])],
   [".gif", new Set(["image/gif"])],
@@ -30,6 +30,7 @@ export function isSafeUploadName(name, allowedExts = SAFE_ATTACHMENT_EXTS) {
 export function isSafeUploadMime(file, allowedExts = SAFE_ATTACHMENT_EXTS) {
   const ext = path.extname(file?.originalname || "").toLowerCase();
   if (!allowedExts.has(ext)) return false;
+  if (file?.mimetype === "application/octet-stream") return true;
   const allowedMimes = MIME_BY_EXT.get(ext);
   if (!allowedMimes) return false;
   return allowedMimes.has(file?.mimetype || "");

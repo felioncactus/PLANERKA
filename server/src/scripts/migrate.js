@@ -48,7 +48,7 @@ async function applyMigration({ filename, fullPath }) {
   }
 }
 
-async function main() {
+export async function runMigrations() {
   if (!process.env.DATABASE_URL) {
     throw new Error("DATABASE_URL is missing. Add it to server/.env");
   }
@@ -73,10 +73,12 @@ async function main() {
   console.log("✅ Migrations complete.");
 }
 
-main()
-  .then(() => closeDb())
-  .catch(async (err) => {
-    console.error(err);
-    await closeDb();
-    process.exit(1);
-  });
+if (process.argv[1] && path.resolve(process.argv[1]) === __filename) {
+  runMigrations()
+    .then(() => closeDb())
+    .catch(async (err) => {
+      console.error(err);
+      await closeDb();
+      process.exit(1);
+    });
+}
