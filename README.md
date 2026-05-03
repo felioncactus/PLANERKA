@@ -94,17 +94,9 @@ DATABASE_URL=postgres://postgres:YOUR_PASSWORD@localhost:5432/planorka
 JWT_SECRET=change_me_super_secret
 JWT_EXPIRES_IN=7d
 
-SMTP_HOST=smtp.example.com
-SMTP_PORT=587
-SMTP_USER=your_smtp_username
-SMTP_PASS=your_smtp_password
-SMTP_FROM="PLANERKA <no-reply@example.com>"
-
 OPENAI_API_KEY=your_key_if_using_ai_features
 OPENAI_MODEL=gpt-4o-mini
 ```
-
-Email verification and password recovery use SMTP. If SMTP is not configured in development, the server prints verification/recovery codes to the console.
 
 ### Client Env
 

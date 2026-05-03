@@ -2430,6 +2430,47 @@ html[data-theme="light"] .navbar-wrap {
   justify-content: center;
 }
 
+.password-rules {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--hairline);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--surface-soft) 86%, transparent);
+}
+
+.password-rule {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.25;
+}
+
+.password-rule span:first-child {
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--muted) 12%, transparent);
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.password-rule.is-ok {
+  color: color-mix(in srgb, #15803d 82%, var(--fg));
+}
+
+.password-rule.is-ok span:first-child {
+  background: rgba(34, 197, 94, 0.16);
+  color: #15803d;
+}
+
 @media (max-width: 560px) {
   .auth-shell-compact {
     min-height: 100svh;
@@ -2443,6 +2484,10 @@ html[data-theme="light"] .navbar-wrap {
   }
 
   .auth-inline-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .password-rules {
     grid-template-columns: 1fr;
   }
 }

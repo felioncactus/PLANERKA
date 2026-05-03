@@ -2,6 +2,8 @@ import React, { useMemo, useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useLanguage } from "../context/LanguageContext";
+import PasswordRules from "../components/PasswordRules";
+import { isStrongPassword } from "../utils/passwordRules";
 
 export default function Register() {
   const { user, register } = useAuth();
@@ -43,12 +45,8 @@ export default function Register() {
     setError("");
 
     try {
-      const result = await register({ name, email, password, avatarUrl, language });
-      if (result?.pendingVerification) {
-        nav(`/verify-email?email=${encodeURIComponent(result.email || email)}`, { replace: true });
-      } else {
-        nav("/dashboard", { replace: true });
-      }
+      await register({ name, email, password, avatarUrl, language });
+      nav("/dashboard", { replace: true });
     } catch (err) {
       setError(err?.response?.data?.error?.message || err?.response?.data?.message || err.message || "Registration failed");
     }
@@ -93,6 +91,7 @@ export default function Register() {
             <span>Password</span>
             <input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
           </label>
+          <PasswordRules password={password} />
 
           <label className="auth-label" htmlFor="language">
             <span>{t("Language")}</span>
@@ -127,7 +126,7 @@ export default function Register() {
 
           {error ? <div className="notice notice-danger small">{error}</div> : null}
 
-          <button className="btn btn-primary auth-submit" type="submit">
+          <button className="btn btn-primary auth-submit" type="submit" disabled={!isStrongPassword(password)}>
             Create account
           </button>
 
