@@ -6,6 +6,46 @@
   min-height: 100vh;
 }
 
+/* ULTIMATE mobile dashboard override in App.css too, before mobile-final wins again. */
+@media (max-width: 980px) {
+  .dashboard-shell.container {
+    width: 100% !important;
+    max-width: 640px !important;
+    height: auto !important;
+    min-height: calc(100dvh - 78px) !important;
+    overflow: visible !important;
+  }
+
+  .dashboard-board {
+    display: grid !important;
+    grid-auto-flow: column !important;
+    grid-auto-columns: 100% !important;
+    width: 100% !important;
+    height: calc(100dvh - 260px) !important;
+    min-height: 520px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    scroll-snap-type: x mandatory !important;
+    contain: layout paint !important;
+  }
+
+  .dashboard-home-pane {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+  }
+
+  .dashboard-schedule-pane .dashboard-calendar-card {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+
+  .dashboard-mobile-schedule-list-card,
+  .dashboard-mobile-schedule-list-card.is-mounted {
+    display: grid !important;
+  }
+}
+
 /* Layout */
 .container {
   max-width: 1100px;
@@ -654,6 +694,56 @@ html[data-theme="light"] .empty {
 
 .cal-hint {
   padding-left: 2px;
+}
+
+.calendar-grid-scroll {
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+}
+
+.calendar-grid-scroll .calendar-grid {
+  min-width: 760px;
+}
+
+.calendar-shell-compact {
+  height: 100%;
+  min-height: 0;
+  gap: 10px;
+}
+
+.calendar-shell-compact .calendar-grid-wrap {
+  min-height: 0;
+}
+
+.calendar-shell-compact .calendar-grid {
+  gap: 6px;
+}
+
+.calendar-shell-compact .cal-cell {
+  min-height: 70px;
+  padding: 8px;
+  border-radius: 12px;
+}
+
+.calendar-shell-compact .cal-events {
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.calendar-shell-compact .cal-event {
+  padding: 3px 6px;
+}
+
+.calendar-shell-compact .cal-side {
+  min-height: 0;
+  overflow: auto;
+}
+
+.calendar-shell-compact .cal-side-list {
+  gap: 8px;
 }
 
 /* Task planner modal */
@@ -5840,6 +5930,253 @@ html[data-theme="light"] .navbar-wrap {
   text-decoration: none;
 }
 
+.dashboard-shell.container {
+  width: min(100% - 32px, 1540px);
+  max-width: 1540px;
+  min-height: calc(100dvh - 70px);
+  padding: 18px 0 22px;
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  gap: 14px;
+}
+
+.dashboard-page-header {
+  margin: 8px 0 0;
+}
+
+.dashboard-error {
+  margin: 0;
+}
+
+.dashboard-command-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(320px, 0.64fr);
+  grid-template-areas:
+    "stats stats"
+    "next side";
+  gap: 14px;
+  min-height: 0;
+}
+
+.dashboard-stat-grid.grid-12 {
+  grid-area: stats;
+  gap: 12px;
+  margin-top: 0 !important;
+}
+
+.dashboard-stat-card {
+  min-height: 104px;
+  padding: 14px 18px;
+  display: grid;
+  align-content: space-between;
+}
+
+.dashboard-stat-card .stat-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.dashboard-stat-card .stat-value {
+  font-size: clamp(2.1rem, 4.2vw, 3.35rem);
+  line-height: 0.95;
+}
+
+.dashboard-panel {
+  min-width: 0;
+  min-height: 0;
+}
+
+.dashboard-up-next {
+  grid-area: next;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 10px;
+  margin: 0;
+}
+
+.dashboard-courses-main {
+  grid-area: next;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 10px;
+  margin: 0;
+  min-width: 0;
+  min-height: 0;
+}
+
+.dashboard-courses-feature-card {
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.dashboard-courses-feature-card .dashboard-course-list {
+  height: 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  align-content: start;
+  gap: 10px;
+  overflow: auto;
+}
+
+.dashboard-chip-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.dashboard-chip-link:hover {
+  text-decoration: none;
+}
+
+.dashboard-up-next-mini {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.dashboard-up-next-empty {
+  min-height: 150px;
+  padding: 12px 0 0;
+}
+
+.dashboard-week-list-compact {
+  max-height: 210px;
+  overflow: auto;
+}
+
+.dashboard-next-grid.grid-12 {
+  display: block;
+}
+
+.dashboard-upcoming-card {
+  min-height: 0;
+  height: 100%;
+  overflow: auto;
+}
+
+.dashboard-upcoming-card .empty {
+  min-height: 180px;
+}
+
+.dashboard-week-list {
+  max-height: 246px;
+  overflow: auto;
+  padding-right: 2px;
+}
+
+.dashboard-side-stack {
+  grid-area: side;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr);
+  gap: 14px;
+  min-width: 0;
+  min-height: 0;
+}
+
+.dashboard-courses-mini,
+.dashboard-quick-actions {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.dashboard-courses-mini {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 10px;
+}
+
+.dashboard-course-list {
+  min-height: 0;
+  overflow: auto;
+  padding-right: 2px;
+}
+
+.dashboard-course-link,
+.dashboard-action-row {
+  color: inherit;
+  text-decoration: none;
+}
+
+.dashboard-course-link:hover,
+.dashboard-action-row:hover {
+  text-decoration: none;
+}
+
+.dashboard-course-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dashboard-course-title > span:last-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dashboard-mini-empty {
+  margin-top: 0;
+  min-height: 0;
+}
+
+.dashboard-mini-head {
+  margin-bottom: 10px;
+}
+
+.dashboard-mini-head .section-title {
+  font-size: 1.1rem;
+}
+
+.dashboard-action-list {
+  display: grid;
+  gap: 8px;
+}
+
+.dashboard-action-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--surface-soft) 68%, transparent);
+}
+
+.dashboard-action-row > span:first-child {
+  display: grid;
+  min-width: 0;
+}
+
+.dashboard-action-row .btn {
+  min-height: 36px;
+  padding: 7px 10px;
+}
+
+.dashboard-schedule {
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 10px;
+  margin: 0;
+}
+
+.dashboard-schedule-head {
+  margin: 0;
+}
+
+.dashboard-calendar-card {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.dashboard-calendar-card .calendar-grid-wrap {
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
+  min-height: 0;
+}
+
 @media (max-width: 760px) {
   .dashboard-shell.container {
     max-width: 100%;
@@ -7221,6 +7558,167 @@ html[data-theme="light"] .navbar-wrap {
   }
 }
 
+/* First-time onboarding tour */
+.onboarding-tour {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  pointer-events: auto;
+}
+
+.onboarding-shade {
+  position: fixed;
+  background: rgba(2, 6, 23, 0.72);
+  backdrop-filter: blur(2px);
+}
+
+.onboarding-shade-top,
+.onboarding-shade-bottom {
+  left: 0;
+  right: 0;
+}
+
+.onboarding-shade-top {
+  top: 0;
+}
+
+.onboarding-shade-bottom {
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.onboarding-shade-left {
+  left: 0;
+}
+
+.onboarding-shade-right {
+  right: 0;
+}
+
+.onboarding-spotlight {
+  position: fixed;
+  border: 2px solid rgba(125, 211, 252, 0.95);
+  border-radius: 18px;
+  box-shadow:
+    0 0 0 6px rgba(125, 211, 252, 0.18),
+    0 18px 44px rgba(2, 6, 23, 0.34);
+  pointer-events: none;
+  transition:
+    top var(--dur-2) var(--ease-out),
+    left var(--dur-2) var(--ease-out),
+    width var(--dur-2) var(--ease-out),
+    height var(--dur-2) var(--ease-out);
+}
+
+.onboarding-card {
+  position: fixed;
+  width: min(360px, calc(100vw - 32px));
+  border: 1px solid color-mix(in srgb, var(--accent) 34%, var(--border));
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--bg-elevated) 96%, transparent);
+  color: var(--fg);
+  box-shadow: 0 24px 72px rgba(2, 6, 23, 0.44);
+  padding: 18px;
+}
+
+.onboarding-card.is-centered {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.onboarding-count {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.onboarding-card h2 {
+  margin: 6px 0 8px;
+  font-size: 1.3rem;
+  letter-spacing: 0;
+}
+
+.onboarding-card p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.onboarding-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.onboarding-step-actions {
+  display: flex;
+  gap: 8px;
+}
+
+@media (max-width: 520px) {
+  .onboarding-card {
+    left: 16px !important;
+    right: 16px;
+    bottom: calc(96px + env(safe-area-inset-bottom));
+    top: auto !important;
+    width: auto;
+    max-height: min(48dvh, 360px);
+    overflow-y: auto;
+    transform: none !important;
+    padding: 16px;
+    border-radius: 22px;
+  }
+
+  .onboarding-card h2 {
+    font-size: 1.12rem;
+    line-height: 1.15;
+  }
+
+  .onboarding-card p {
+    font-size: 0.95rem;
+    line-height: 1.45;
+  }
+
+  .onboarding-actions {
+    display: grid;
+    grid-template-columns: minmax(78px, 0.7fr) minmax(0, 1.3fr);
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .onboarding-step-actions {
+    display: grid;
+    grid-template-columns: 0.82fr 1.18fr;
+    gap: 8px;
+  }
+
+  .onboarding-actions .btn,
+  .onboarding-step-actions .btn {
+    justify-content: center;
+    width: 100%;
+    min-height: 44px;
+    padding: 9px 10px;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 380px) {
+  .onboarding-card {
+    left: 12px !important;
+    right: 12px;
+    bottom: calc(88px + env(safe-area-inset-bottom));
+    max-height: 50dvh;
+  }
+
+  .onboarding-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Mobile planner split: keep the calendar clean and move slots/AI into a sheet. */
 .planner-mobile-slot-launch,
 .planner-mobile-sheet-head {
@@ -7383,6 +7881,760 @@ html[data-theme="light"] .navbar-wrap {
 
   .planner-ai-plan .muted {
     overflow-wrap: anywhere;
+  }
+}
+
+/* ULTIMATE EOF mobile dashboard override in App.css. */
+@media (max-width: 980px) {
+  .dashboard-shell.container {
+    width: 100% !important;
+    max-width: 640px !important;
+    height: auto !important;
+    min-height: calc(100dvh - 78px) !important;
+    overflow: visible !important;
+  }
+
+  .dashboard-board {
+    display: grid !important;
+    grid-auto-flow: column !important;
+    grid-auto-columns: 100% !important;
+    width: 100% !important;
+    height: calc(100dvh - 260px) !important;
+    min-height: 520px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    scroll-snap-type: x mandatory !important;
+    contain: layout paint !important;
+  }
+
+  .dashboard-home-pane {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+  }
+
+  .dashboard-schedule-pane .dashboard-calendar-card {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+
+  .dashboard-mobile-schedule-list-card,
+  .dashboard-mobile-schedule-list-card.is-mounted {
+    display: grid !important;
+  }
+}
+
+/* Dashboard remake: keep command center and calendar in one compact flow. */
+@media (min-width: 981px) {
+  .dashboard-shell.container {
+    width: min(100% - 32px, 1540px) !important;
+    max-width: 1540px !important;
+    min-height: calc(100dvh - 70px) !important;
+    padding: 18px 0 22px !important;
+    display: grid !important;
+    grid-template-rows: auto auto minmax(0, 1fr) !important;
+    gap: 14px !important;
+    overflow: hidden !important;
+  }
+
+  .dashboard-command-grid {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1.5fr) minmax(320px, 0.64fr) !important;
+    grid-template-areas:
+      "stats stats"
+      "next side" !important;
+    gap: 14px !important;
+    min-height: 0 !important;
+  }
+
+  .dashboard-stat-grid.grid-12 {
+    grid-area: stats !important;
+    margin-top: 0 !important;
+  }
+
+  .dashboard-up-next {
+    grid-area: next !important;
+    margin: 0 !important;
+  }
+
+  .dashboard-side-stack {
+    grid-area: side !important;
+  }
+
+  .dashboard-schedule {
+    min-height: 0 !important;
+    margin: 0 !important;
+  }
+
+  .dashboard-calendar-card {
+    min-height: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .dashboard-calendar-card .calendar-grid-wrap {
+    grid-template-columns: minmax(0, 1fr) minmax(260px, 320px) !important;
+  }
+}
+
+@media (max-width: 980px) {
+  .dashboard-command-grid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+
+  .dashboard-side-stack {
+    display: none !important;
+  }
+
+  .dashboard-up-next {
+    display: grid !important;
+    gap: 10px !important;
+    margin: 18px 0 0 !important;
+  }
+
+  .dashboard-upcoming-card {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  .dashboard-schedule {
+    display: grid !important;
+    gap: 10px !important;
+    margin-top: 18px !important;
+  }
+
+  .dashboard-calendar-card .calendar-grid-wrap {
+    grid-template-columns: 1fr !important;
+  }
+
+  .dashboard-calendar-card .calendar-grid-scroll .calendar-grid {
+    min-width: 680px !important;
+  }
+}
+
+/* Horizontal dashboard board: overview first, schedule to the right. */
+.dashboard-board {
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 100%;
+  gap: 18px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;
+  padding-bottom: 4px;
+}
+
+.dashboard-board-page {
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  scroll-snap-align: start;
+}
+
+.dashboard-home-pane {
+  display: grid;
+  overflow: hidden;
+}
+
+.dashboard-pane-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.dashboard-schedule-pane {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 12px;
+  overflow: hidden;
+}
+
+.dashboard-schedule-list-card {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.dashboard-schedule-list {
+  height: 100%;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  align-content: start;
+  gap: 12px;
+  overflow: auto;
+  padding-right: 2px;
+}
+
+.dashboard-schedule-day {
+  min-width: 0;
+  display: grid;
+  align-content: start;
+  gap: 8px;
+}
+
+.dashboard-schedule-date {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.dashboard-schedule-events {
+  display: grid;
+  gap: 8px;
+}
+
+.dashboard-schedule-event {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 68px;
+  padding: 12px;
+  border: 1px solid rgba(124, 124, 255, 0.18);
+  border-left: 4px solid rgba(124, 124, 255, 0.42);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--surface-soft) 76%, transparent);
+}
+
+.dashboard-schedule-event-main {
+  min-width: 0;
+}
+
+.dashboard-schedule-event .row-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dashboard-schedule-time {
+  white-space: nowrap;
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.dashboard-schedule-controls {
+  flex-wrap: nowrap;
+}
+
+.dashboard-schedule-controls .btn {
+  min-width: 46px;
+  min-height: 46px;
+  justify-content: center;
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.dashboard-schedule-empty {
+  height: 100%;
+  min-height: 220px;
+}
+
+@media (min-width: 981px) {
+  .dashboard-shell.container {
+    grid-template-rows: auto auto minmax(0, 1fr) !important;
+  }
+
+  .dashboard-board {
+    height: 100%;
+  }
+
+  .dashboard-command-grid {
+    height: 100%;
+  }
+}
+
+@media (max-width: 980px) {
+  .dashboard-board {
+    min-height: min(760px, calc(100dvh - 210px));
+  }
+
+  .dashboard-board-page {
+    min-height: 0;
+  }
+
+  .dashboard-home-pane {
+    overflow: auto;
+  }
+
+  .dashboard-schedule-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Final fit pass for the sideways dashboard board. */
+.dashboard-board {
+  cursor: grab;
+}
+
+.dashboard-board.is-dragging {
+  cursor: grabbing;
+  scroll-snap-type: none;
+  user-select: none;
+}
+
+.dashboard-board.is-dragging * {
+  user-select: none;
+}
+
+@media (min-width: 981px) {
+  .dashboard-shell.container {
+    height: calc(100dvh - 66px) !important;
+    min-height: 0 !important;
+    grid-template-rows: auto auto minmax(0, 1fr) !important;
+    overflow: hidden !important;
+  }
+
+  .dashboard-page-header {
+    min-height: 62px !important;
+    margin: 0 !important;
+  }
+
+  .dashboard-board {
+    height: 100% !important;
+    min-height: 0 !important;
+  }
+
+  .dashboard-home-pane,
+  .dashboard-schedule-pane {
+    height: 100% !important;
+    min-height: 0 !important;
+  }
+
+  .dashboard-command-grid {
+    height: 100% !important;
+    grid-template-rows: clamp(96px, 13dvh, 122px) minmax(0, 1fr) !important;
+    align-content: stretch !important;
+  }
+
+  .dashboard-stat-grid.grid-12 {
+    height: 100% !important;
+    align-items: stretch !important;
+  }
+
+  .dashboard-stat-grid.grid-12 > .dashboard-stat-card,
+  .dashboard-stat-grid.grid-12 > .dashboard-stat-card.col-3,
+  .dashboard-stat-grid.grid-12 > a.dashboard-stat-card {
+    height: 100% !important;
+    min-height: 0 !important;
+    padding: 14px 18px !important;
+    align-content: space-between !important;
+  }
+
+  .dashboard-stat-card .stat-value {
+    font-size: clamp(2rem, 3.6vw, 3rem) !important;
+  }
+
+  .dashboard-up-next,
+  .dashboard-side-stack {
+    min-height: 0 !important;
+  }
+
+  .dashboard-upcoming-card {
+    height: 100% !important;
+    min-height: 0 !important;
+  }
+
+  .dashboard-upcoming-card .empty {
+    min-height: 0 !important;
+    height: 100% !important;
+    align-content: center !important;
+  }
+}
+
+@media (max-width: 980px) {
+  .dashboard-shell.container {
+    height: calc(100dvh - 72px) !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    grid-template-rows: auto auto minmax(0, 1fr) !important;
+  }
+
+  .dashboard-board {
+    height: 100% !important;
+    min-height: 0 !important;
+  }
+
+  .dashboard-home-pane {
+    overflow-y: auto !important;
+  }
+
+  .dashboard-command-grid {
+    align-content: start !important;
+  }
+}
+
+/* Hide scrollbars visually while keeping every scroll area usable. */
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+*::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
+/* Absolute final dashboard course/up-next swap rules. */
+.dashboard-courses-main {
+  grid-area: next !important;
+}
+
+.dashboard-courses-feature-card .dashboard-course-list {
+  height: 100% !important;
+}
+
+.dashboard-up-next-mini {
+  display: grid !important;
+  grid-template-rows: auto minmax(0, 1fr) !important;
+}
+
+.dashboard-up-next-empty {
+  min-height: 0 !important;
+  align-content: center !important;
+}
+
+@media (min-width: 981px) {
+  .dashboard-courses-main {
+    min-height: 0 !important;
+    grid-template-rows: auto minmax(0, 1fr) !important;
+  }
+
+  .dashboard-courses-feature-card {
+    min-height: 0 !important;
+    height: 100% !important;
+  }
+
+  .dashboard-up-next-mini {
+    min-height: 0 !important;
+    overflow: hidden !important;
+  }
+}
+
+@media (max-width: 980px) {
+  .dashboard-courses-main {
+    min-height: 0 !important;
+    grid-template-rows: auto auto minmax(0, 1fr) !important;
+    overflow: hidden !important;
+  }
+
+  .dashboard-courses-feature-card {
+    min-height: 0 !important;
+    height: 100% !important;
+    padding: 12px !important;
+    overflow: hidden !important;
+  }
+
+  .dashboard-courses-feature-card .dashboard-course-list {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Final course feature polish and hidden board scrollbar. */
+.dashboard-board {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+.dashboard-board::-webkit-scrollbar,
+.dashboard-board *::-webkit-scrollbar {
+  width: 0 !important;
+  height: 0 !important;
+  display: none !important;
+}
+
+.dashboard-courses-feature-card {
+  position: relative;
+  border-color: color-mix(in srgb, var(--accent) 34%, var(--border));
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--card-2) 92%, white 8%), color-mix(in srgb, var(--card) 94%, transparent)),
+    linear-gradient(90deg, color-mix(in srgb, var(--accent) 12%, transparent), transparent 46%);
+}
+
+.dashboard-courses-feature-card::before {
+  content: "";
+  position: absolute;
+  inset: 16px auto 16px 16px;
+  width: 4px;
+  border-radius: 999px;
+  background: linear-gradient(var(--accent), color-mix(in srgb, #40e0d0 72%, var(--accent)));
+  opacity: 0.7;
+}
+
+.dashboard-course-list-feature {
+  padding: 6px 6px 6px 18px;
+}
+
+.dashboard-course-list-feature .dashboard-course-row {
+  position: relative;
+  min-height: 94px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  padding: 18px 16px 18px 18px;
+  border-color: color-mix(in srgb, var(--course-color, var(--accent)) 24%, var(--border));
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--course-color, var(--accent)) 12%, transparent), transparent 38%),
+    color-mix(in srgb, var(--card) 86%, transparent);
+}
+
+.dashboard-course-list-feature .dashboard-course-row::before {
+  content: "";
+  position: absolute;
+  left: -1px;
+  top: 16px;
+  bottom: 16px;
+  width: 5px;
+  border-radius: 999px;
+  background: var(--course-color, var(--accent));
+}
+
+.dashboard-course-list-feature .dashboard-course-title {
+  font-size: clamp(1.05rem, 1.6vw, 1.28rem);
+}
+
+.dashboard-course-list-feature .dashboard-course-title .course-dot {
+  width: 16px;
+  height: 16px;
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--course-color, var(--accent)) 14%, transparent);
+}
+
+.dashboard-schedule-pane {
+  grid-template-rows: minmax(0, 1fr) !important;
+}
+
+.dashboard-schedule-pane .dashboard-calendar-card {
+  height: 100%;
+}
+
+.dashboard-mobile-schedule-list-card {
+  display: none;
+}
+
+.dashboard-calendar-card .calendar-shell-compact .calendar-grid-wrap {
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 30vw) !important;
+}
+
+.dashboard-calendar-card .calendar-shell-compact .calendar-grid-scroll {
+  overflow: hidden !important;
+}
+
+.dashboard-calendar-card .calendar-shell-compact .calendar-grid-scroll .calendar-grid {
+  min-width: 0 !important;
+}
+
+.dashboard-calendar-card .calendar-shell-compact .cal-cell {
+  min-height: clamp(62px, 8.1dvh, 88px) !important;
+}
+
+.dashboard-calendar-card .calendar-shell-compact .cal-events {
+  margin-top: 4px !important;
+}
+
+.dashboard-calendar-card .calendar-shell-compact .cal-event {
+  font-size: 0.68rem !important;
+  padding: 2px 5px !important;
+}
+
+.dashboard-calendar-card .calendar-shell-compact .cal-hint {
+  display: none !important;
+}
+
+@media (max-width: 980px) {
+  .dashboard-course-list-feature {
+    padding-left: 10px;
+  }
+
+  .dashboard-course-list-feature .dashboard-course-row {
+    min-height: 82px;
+  }
+
+  .dashboard-calendar-card {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    contain: strict !important;
+  }
+
+  .dashboard-mobile-schedule-list-card {
+    display: grid !important;
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: 12px;
+    min-height: 0;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .dashboard-mobile-schedule-list {
+    min-height: 0;
+    overflow: auto;
+    display: grid;
+    align-content: start;
+    gap: 12px;
+  }
+
+  .dashboard-mobile-schedule-day {
+    display: grid;
+    gap: 8px;
+  }
+
+  .dashboard-mobile-schedule-date {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    color: var(--muted);
+    font-weight: 800;
+  }
+
+  .dashboard-mobile-schedule-events {
+    display: grid;
+    gap: 8px;
+  }
+
+  .dashboard-mobile-schedule-event {
+    padding: 12px;
+    border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--border));
+    border-left: 4px solid color-mix(in srgb, var(--accent) 58%, var(--border));
+    border-radius: 16px;
+    background: color-mix(in srgb, var(--surface-soft) 78%, transparent);
+  }
+}
+
+/* Final desktop calendar fit: all 6 weeks stay visible inside the pane. */
+@media (min-width: 981px) {
+  .dashboard-calendar-card {
+    height: 100% !important;
+    min-height: 0 !important;
+    padding: 14px !important;
+  }
+
+  .dashboard-calendar-card .calendar-shell,
+  .dashboard-calendar-card .calendar-shell-compact {
+    height: 100% !important;
+    min-height: 0 !important;
+    display: grid !important;
+    grid-template-rows: auto minmax(0, 1fr) !important;
+    gap: 8px !important;
+  }
+
+  .dashboard-calendar-card .calendar-grid-wrap {
+    height: 100% !important;
+    min-height: 0 !important;
+    grid-template-columns: minmax(0, 1fr) minmax(250px, 28vw) !important;
+    gap: 10px !important;
+  }
+
+  .dashboard-calendar-card .calendar-grid-scroll {
+    height: 100% !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .dashboard-calendar-card .calendar-grid {
+    height: 100% !important;
+    min-height: 0 !important;
+    grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+    grid-template-rows: 22px repeat(6, minmax(0, 1fr)) !important;
+    gap: 5px !important;
+  }
+
+  .dashboard-calendar-card .cal-weekday {
+    min-height: 0 !important;
+    padding: 0 6px !important;
+    align-self: center !important;
+  }
+
+  .dashboard-calendar-card .cal-cell {
+    min-height: 0 !important;
+    height: 100% !important;
+    padding: 7px !important;
+    border-radius: 11px !important;
+    overflow: hidden !important;
+  }
+
+  .dashboard-calendar-card .cal-day {
+    min-height: 18px !important;
+  }
+
+  .dashboard-calendar-card .cal-events {
+    gap: 3px !important;
+    margin-top: 4px !important;
+  }
+
+  .dashboard-calendar-card .cal-event {
+    font-size: 0.64rem !important;
+    line-height: 1.05 !important;
+    padding: 2px 5px !important;
+    border-radius: 8px !important;
+  }
+
+  .dashboard-calendar-card .cal-more {
+    font-size: 0.64rem !important;
+    line-height: 1.1 !important;
+  }
+
+  .dashboard-calendar-card .cal-side {
+    min-height: 0 !important;
+    overflow: auto !important;
+  }
+}
+
+/* Absolute final dashboard fit/interaction rules. */
+.dashboard-shell,
+.dashboard-shell * {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.dashboard-board {
+  touch-action: pan-x;
+}
+
+@media (min-width: 981px) {
+  .dashboard-shell.container {
+    height: calc(100dvh - 64px) !important;
+    min-height: 0 !important;
+    padding: 16px 0 16px !important;
+    grid-template-rows: auto auto minmax(0, 1fr) !important;
+    gap: 12px !important;
+    overflow: hidden !important;
+  }
+
+  .dashboard-command-grid {
+    grid-template-rows: clamp(92px, 12dvh, 118px) minmax(0, 1fr) !important;
+    gap: 12px !important;
+  }
+
+  .dashboard-stat-card {
+    min-height: 0 !important;
+    height: 100% !important;
+    border-radius: 20px !important;
+  }
+
+  .dashboard-up-next {
+    grid-template-rows: auto minmax(0, 1fr) !important;
+  }
+
+  .dashboard-up-next .section-head,
+  .dashboard-mini-head,
+  .dashboard-pane-head {
+    min-height: 42px !important;
+  }
+
+  .dashboard-upcoming-card,
+  .dashboard-courses-mini,
+  .dashboard-quick-actions,
+  .dashboard-schedule-list-card {
+    min-height: 0 !important;
+    overflow: hidden !important;
   }
 }
 

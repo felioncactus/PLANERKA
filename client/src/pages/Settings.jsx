@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import { apiDeleteMe, apiUpdateMe } from "../api/users.api";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "../context/LanguageContext";
+import { ONBOARDING_TOUR_EVENT, translateOnboardingText } from "../utils/onboardingTour";
 
 export default function Settings() {
   const { user, logout, updateSession } = useAuth();
@@ -92,6 +93,14 @@ export default function Settings() {
           "Failed to delete account",
       );
     }
+  }
+
+  function replayWelcomeTour() {
+    window.dispatchEvent(new CustomEvent(ONBOARDING_TOUR_EVENT));
+  }
+
+  function tourText(value) {
+    return translateOnboardingText(language, value);
   }
 
   return (
@@ -187,6 +196,18 @@ export default function Settings() {
                   </div>
                 )}
               </div>
+            </div>
+
+            <hr />
+
+            <div className="row" style={{ justifyContent: "space-between" }} data-tour="settings-replay-tour">
+              <div>
+                <div style={{ fontWeight: 650 }}>{tourText("Welcome tour")}</div>
+                <div className="small muted">{tourText("Replay the first-time tutorial and highlights.")}</div>
+              </div>
+              <button className="btn btn-ghost" type="button" onClick={replayWelcomeTour}>
+                {tourText("Replay tour")}
+              </button>
             </div>
 
             <hr />

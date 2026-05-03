@@ -162,6 +162,7 @@ export default function Navbar() {
             <button
               type="button"
               className="btn btn-ghost nav-mobile-more-btn"
+              data-tour="mobile-top-menu"
               aria-expanded={moreOpen}
               aria-controls="mobile-more-sheet"
               onClick={() => setMoreOpen((value) => !value)}
@@ -173,7 +174,12 @@ export default function Navbar() {
             <div className="navbar-main">
               <nav className="nav-links" aria-label="Primary">
                 {NAV_ITEMS.map((item) => (
-                  <NavLink key={item.to} to={item.to} className={desktopLinkClass}>
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    className={desktopLinkClass}
+                    data-tour={`nav-${item.label.toLowerCase()}`}
+                  >
                     <span className="nav-link-icon" aria-hidden="true">
                       <Icon name={item.icon} size={15} />
                     </span>
@@ -232,6 +238,7 @@ export default function Navbar() {
                 key={item.label}
                 type="button"
                 className={"mobile-tab-link" + (moreOpen ? " active" : "")}
+                data-tour="mobile-nav-menu"
                 onClick={() => setMoreOpen((current) => !current)}
                 aria-label="Open menu"
                 aria-expanded={moreOpen}
@@ -249,6 +256,7 @@ export default function Navbar() {
                 key={item.label}
                 type="button"
                 className="mobile-tab-link mobile-tab-link-assistant"
+                data-tour="mobile-nav-assistant"
                 onClick={toggleAssistant}
                 aria-label="Open assistant"
               >
@@ -259,7 +267,7 @@ export default function Navbar() {
           }
 
           return (
-            <NavLink key={item.to} to={item.to} className={mobileLinkClass}>
+            <NavLink key={item.to} to={item.to} className={mobileLinkClass} data-tour={`mobile-nav-${item.label.toLowerCase()}`}>
               <span className="mobile-tab-icon" aria-hidden="true">
                 <Icon name={item.icon} size={18} />
                 {item.to === "/chat" && friendBadge > 0 ? <span className="mobile-tab-badge">{friendBadge}</span> : null}

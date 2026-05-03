@@ -236,7 +236,7 @@ export default function Tasks() {
             </div>
           </div>
           <div className="row page-actions">
-            <button type="button" className="btn btn-primary" onClick={() => setCreateOpen(true)}>
+            <button type="button" className="btn btn-primary" onClick={() => setCreateOpen(true)} data-tour="tasks-create">
               Create task
             </button>
             <Link to="/courses" className="btn btn-ghost">

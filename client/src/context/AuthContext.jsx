@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { apiLogin, apiMe, apiRegister } from "../api/auth.api";
 import { setAuthToken } from "../api/http";
+import { ONBOARDING_PENDING_KEY } from "../utils/onboardingTour";
 
 const AuthContext = createContext(null);
 
@@ -58,6 +59,10 @@ export function AuthProvider({ children }) {
   async function register(payload) {
     const data = await apiRegister(payload);
     applySession(data);
+    localStorage.setItem(ONBOARDING_PENDING_KEY, "1");
+    if (data?.user?.id || data?.user?.email) {
+      localStorage.setItem(`${ONBOARDING_PENDING_KEY}:${data.user.id || data.user.email}`, "1");
+    }
     return data.user;
   }
 

@@ -78,7 +78,7 @@ export function calendarVisibleRange(anchor) {
   return { gridStart, gridEnd };
 }
 
-export default function CalendarWidget({ anchor, events, loading, onPrevMonth, onNextMonth }) {
+export default function CalendarWidget({ anchor, events, loading, onPrevMonth, onNextMonth, compact = false }) {
   const { language, t } = useLanguage();
   const [selected, setSelected] = useState(() => toYmd(new Date()));
   const [pressedKey, setPressedKey] = useState("");
@@ -125,7 +125,7 @@ export default function CalendarWidget({ anchor, events, loading, onPrevMonth, o
   }
 
   return (
-    <div className="calendar-shell">
+    <div className={`calendar-shell ${compact ? "calendar-shell-compact" : ""}`}>
       <div className="calendar-head">
         <div className="calendar-title">
           <div className="section-title" style={{ margin: 0 }}>Calendar</div>
@@ -139,7 +139,8 @@ export default function CalendarWidget({ anchor, events, loading, onPrevMonth, o
       </div>
 
       <div className="calendar-grid-wrap">
-        <div className="calendar-grid">
+        <div className="calendar-grid-scroll" aria-label={t("Calendar days")}>
+          <div className="calendar-grid">
           {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((w) => (
             <div key={w} className="cal-weekday">{t(w)}</div>
           ))}
@@ -169,7 +170,7 @@ export default function CalendarWidget({ anchor, events, loading, onPrevMonth, o
                 </div>
 
                 <div className="cal-events">
-                  {list.slice(0, 3).map((ev) => (
+                  {list.slice(0, compact ? 2 : 3).map((ev) => (
                     <div
                       key={ev.id}
                       className={`cal-event cal-${ev.type}`}
@@ -181,11 +182,14 @@ export default function CalendarWidget({ anchor, events, loading, onPrevMonth, o
                       {ev.title}
                     </div>
                   ))}
-                  {count > 3 ? <div className="cal-more muted small">+{count - 3} {t("more")}</div> : null}
+                  {count > (compact ? 2 : 3) ? (
+                    <div className="cal-more muted small">+{count - (compact ? 2 : 3)} {t("more")}</div>
+                  ) : null}
                 </div>
               </button>
             );
           })}
+          </div>
         </div>
 
         <div className="cal-side">
