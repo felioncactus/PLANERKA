@@ -118,7 +118,10 @@ For local Vite proxy usage:
 
 ```env
 VITE_API_BASE_URL=/api
+VITE_UPLOADS_BASE_URL=
 ```
+
+If the React static site and Express API are deployed as separate Render services, set `VITE_UPLOADS_BASE_URL` on the client to the API origin, for example `https://your-api-service.onrender.com`. Leave it blank when frontend and backend share the same origin.
 
 ## Database Setup
 
@@ -142,6 +145,8 @@ npm run migrate
 ```
 
 Run migrations whenever a new SQL file appears in `server/migrations/`.
+
+Uploaded course images, task attachments, chat attachments, and note images are stored in PostgreSQL via the `uploaded_files` table so they survive Render restarts and redeploys.
 
 Current migrations include schema for users, courses, tasks, calendar blocks, avatars, friends/messages, attachments, course notes, chat polls/timers, course date ranges, and user language.
 

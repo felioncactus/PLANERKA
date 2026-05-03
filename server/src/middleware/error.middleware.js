@@ -2,7 +2,7 @@ import { HttpError } from "../utils/httpError.js";
 
 export function errorMiddleware(err, req, res, next) {
   const isHttp = err instanceof HttpError;
-  const isMulter = err?.name === "MulterError" || /Only image uploads/i.test(err?.message || "");
+  const isMulter = err?.name === "MulterError" || /Only image uploads|File type is not allowed|Invalid task id/i.test(err?.message || "");
 
   const status = isHttp ? err.status : isMulter ? 400 : 500;
   const code = isHttp ? err.code : isMulter ? "UPLOAD_ERROR" : "INTERNAL_SERVER_ERROR";

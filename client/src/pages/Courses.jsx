@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { apiDeleteCourse, apiListCourses } from "../api/courses.api";
 import { useLanguage } from "../context/LanguageContext";
+import { assetUrl } from "../api/assets";
 
 function fmtTime(t) {
   return t ? String(t).slice(0, 5) : "";
@@ -137,7 +138,7 @@ export default function Courses() {
                   <article key={course.id} className="course-card card lift">
                     <Link to={`/courses/${course.id}`} className="course-card-media" aria-label={`Open ${course.name}`}>
                       {course.image_url ? (
-                        <img className="course-card-image" src={course.image_url} alt={course.name} />
+                        <img className="course-card-image" src={assetUrl(course.image_url)} alt={course.name} />
                       ) : (
                         <div className="course-card-image course-card-image-fallback">
                           <span>{courseInitial}</span>

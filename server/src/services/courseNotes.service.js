@@ -8,6 +8,7 @@ import {
   updateCourseNote,
   deleteCourseNote,
 } from "../repositories/courseNotes.repo.js";
+import { saveUploadedFile } from "./uploadedFiles.service.js";
 
 const createSchema = z.object({
   title: z.string().trim().min(1).max(200),
@@ -90,4 +91,12 @@ export async function updateNoteForUser(userId, noteId, input) {
 export async function deleteNoteForUser(userId, noteId) {
   const deleted = await deleteCourseNote({ userId, noteId });
   if (!deleted) throw notFound("Note not found", "NOTE_NOT_FOUND");
+}
+
+export async function uploadNoteImageForUser(userId, noteId, file) {
+  const note = await getCourseNoteByIdForUser({ userId, noteId });
+  if (!note) throw notFound("Note not found", "NOTE_NOT_FOUND");
+  const uploaded = await saveUploadedFile({ category: "notes", ownerUserId: userId, file });
+  if (!uploaded) throw badRequest("Image is required", "VALIDATION_ERROR");
+  return uploaded;
 }

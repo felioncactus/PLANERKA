@@ -1,8 +1,9 @@
 ﻿import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import Navbar from "../components/Navbar";
-import { apiGetNote, apiUpdateNote, apiDeleteNote } from "../api/notes.api";
+import { apiGetNote, apiUpdateNote, apiDeleteNote, apiUploadNoteImage } from "../api/notes.api";
 import { apiNoteAssistantHelp } from "../api/noteAssistant.api";
+import { assetUrl } from "../api/assets";
 import { useLanguage } from "../context/LanguageContext";
 
 
@@ -85,7 +86,7 @@ function sanitizeNoteHtml(html) {
 
 function isSafeImageSrc(value) {
   const src = String(value || "").trim();
-  return /^data:image\/(png|jpe?g|webp|gif);base64,/i.test(src) || /^https?:\/\//i.test(src);
+  return /^data:image\/(png|jpe?g|webp|gif);base64,/i.test(src) || /^https?:\/\//i.test(src) || /^\/uploads\/notes\//i.test(src);
 }
 
 function normalizeImageSize(img) {
@@ -219,21 +220,13 @@ function closestElement(node, selector, root) {
   return el && root?.contains(el) ? el : null;
 }
 
-function readImageFile(file) {
-  return new Promise((resolve, reject) => {
-    if (!file || !/^image\/(png|jpe?g|webp|gif)$/i.test(file.type)) {
-      reject(new Error("Only PNG, JPG, WebP, or GIF images are allowed."));
-      return;
-    }
-    if (file.size > 3_000_000) {
-      reject(new Error("Image is too large. Please use an image under 3MB."));
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result || ""));
-    reader.onerror = () => reject(new Error("Failed to read image."));
-    reader.readAsDataURL(file);
-  });
+function validateImageFile(file) {
+  if (!file || !/^image\/(png|jpe?g|webp|gif)$/i.test(file.type)) {
+    throw new Error("Only PNG, JPG, WebP, or GIF images are allowed.");
+  }
+  if (file.size > 5_000_000) {
+    throw new Error("Image is too large. Please use an image under 5MB.");
+  }
 }
 
 export default function NoteEditor() {
@@ -424,10 +417,12 @@ export default function NoteEditor() {
 
   async function insertImageFile(file) {
     try {
-      const src = await readImageFile(file);
+      validateImageFile(file);
+      const data = await apiUploadNoteImage(noteId, file);
+      const src = assetUrl(data.file?.url);
       insertEditorHtml(`<p><img class="note-editor-image" src="${src}" alt="Inserted note image" width="520"></p><p><br></p>`);
     } catch (err) {
-      setError(err.message || "Failed to insert image");
+      setError(err?.response?.data?.error?.message || err.message || "Failed to insert image");
     }
   }
 

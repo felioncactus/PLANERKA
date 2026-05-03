@@ -25,6 +25,7 @@ import { useAuth } from "../context/AuthContext";
 import { useLanguage } from "../context/LanguageContext";
 import { useNotifications } from "../context/NotificationsContext";
 import { formatBytes, renderChatMarkdown } from "../components/chatFormatting";
+import { assetUrl } from "../api/assets";
 
 const EMOJIS = ["😀", "😂", "😍", "🤔", "🔥", "👍", "🎉", "❤️"];
 const FORMAT_ACTIONS = [
@@ -261,9 +262,9 @@ function InlineAttachments({ attachments = [] }) {
       {images.length ? (
         <div className="chat-attachment-grid">
           {images.map((att) => (
-            <a key={att.id} href={att.file_url} target="_blank" rel="noreferrer" className="chat-attachment-image-link">
+            <a key={att.id} href={assetUrl(att.file_url)} target="_blank" rel="noreferrer" className="chat-attachment-image-link">
               <img
-                src={att.file_url}
+                src={assetUrl(att.file_url)}
                 alt={att.original_filename || "chat image"}
                 className="chat-attachment-image"
               />
@@ -276,7 +277,7 @@ function InlineAttachments({ attachments = [] }) {
           {files.map((att) => (
             <a
               key={att.id}
-              href={att.file_url}
+              href={assetUrl(att.file_url)}
               target="_blank"
               rel="noreferrer"
               className="chat-file-link"

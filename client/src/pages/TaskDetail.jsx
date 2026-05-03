@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import {
@@ -9,6 +9,7 @@ import {
   apiUpdateTask,
   apiUploadTaskAttachment,
 } from "../api/tasks.api";
+import { assetUrl } from "../api/assets";
 
 function fmtBytes(n) {
   const v = Number(n || 0);
@@ -41,8 +42,6 @@ export default function TaskDetail() {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
-
-  const uploadsBase = useMemo(() => import.meta.env.VITE_UPLOADS_BASE_URL || "", []);
 
   async function refresh() {
     setError("");
@@ -243,7 +242,7 @@ export default function TaskDetail() {
           ) : (
             <div style={{ marginTop: 12, display: "grid", gap: 10 }}>
               {attachments.map((a) => {
-                const href = `${uploadsBase}${a.url}`;
+                const href = assetUrl(a.url);
                 return (
                   <div
                     key={a.id}

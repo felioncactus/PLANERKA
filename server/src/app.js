@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import { apiRouter } from "./routes/index.js";
+import { uploadsRouter } from "./routes/uploads.routes.js";
 import path from "path";
 import fs from "fs";
 import { errorMiddleware } from "./middleware/error.middleware.js";
@@ -54,8 +55,24 @@ export function createApp() {
     return direct;
   })();
 
+  app.use("/uploads", uploadsRouter);
   app.use("/uploads", express.static(uploadsDir));
   app.use("/api", apiRouter);
+
+  const clientDist = (() => {
+    const direct = path.resolve(process.cwd(), "client", "dist");
+    const sibling = path.resolve(process.cwd(), "..", "client", "dist");
+    if (fs.existsSync(direct)) return direct;
+    if (fs.existsSync(sibling)) return sibling;
+    return null;
+  })();
+
+  if (clientDist) {
+    app.use(express.static(clientDist));
+    app.get(/^(?!\/(?:api|uploads|health)(?:\/|$)).*/, (req, res) => {
+      res.sendFile(path.join(clientDist, "index.html"));
+    });
+  }
 
   // error handler last
   app.use(errorMiddleware);

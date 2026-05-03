@@ -6,7 +6,9 @@ import {
   createCourseNoteHandler,
   updateCourseNoteHandler,
   deleteCourseNoteHandler,
+  uploadNoteImageHandler,
 } from "../controllers/courseNotes.controller.js";
+import { courseUpload } from "../middleware/upload.middleware.js";
 
 export const courseNotesRouter = Router();
 
@@ -16,4 +18,5 @@ courseNotesRouter.get("/courses/:courseId/notes", listCourseNotesHandler);
 courseNotesRouter.post("/courses/:courseId/notes", createCourseNoteHandler);
 courseNotesRouter.get("/notes/:noteId", getCourseNoteHandler);
 courseNotesRouter.put("/notes/:noteId", updateCourseNoteHandler);
+courseNotesRouter.post("/notes/:noteId/images", courseUpload.single("image"), uploadNoteImageHandler);
 courseNotesRouter.delete("/notes/:noteId", deleteCourseNoteHandler);

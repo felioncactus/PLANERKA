@@ -1,6 +1,5 @@
-import fs from "fs";
 import path from "path";
-import { badRequest, notFound } from "../utils/httpError.js";
+import { notFound } from "../utils/httpError.js";
 import { getTaskByIdForUser } from "../repositories/tasks.repo.js";
 import {
   createTaskAttachment,
@@ -8,17 +7,8 @@ import {
   getTaskAttachmentById,
   listTaskAttachments,
 } from "../repositories/taskAttachments.repo.js";
-
-function resolveUploadsDir() {
-  const cwd = process.cwd();
-  const direct = path.resolve(cwd, "uploads");
-  const nested = path.resolve(cwd, "server", "uploads");
-  if (fs.existsSync(direct)) return direct;
-  if (fs.existsSync(nested)) return nested;
-  return direct;
-}
-
-const UPLOADS_DIR = resolveUploadsDir();
+import { deleteUploadedFileById } from "../repositories/uploadedFiles.repo.js";
+import { saveUploadedFile } from "./uploadedFiles.service.js";
 
 function toPublicUrl(storedPath) {
   // storedPath is relative under uploads/, e.g. tasks/<taskId>/<file>
@@ -37,19 +27,17 @@ export async function addAttachmentsToTask({ userId, taskId, files }) {
 
   const created = [];
   for (const f of files) {
-    if (!f?.filename || !f?.path) continue;
+    if (!f?.buffer) continue;
 
-    // Convert absolute file path to stored path relative to uploads/
-    const storedPath = path
-      .relative(UPLOADS_DIR, f.path)
-      .split(path.sep)
-      .join("/");
+    const upload = await saveUploadedFile({ category: "tasks", ownerUserId: userId, file: f });
+    if (!upload) continue;
+    const storedPath = `tasks/${upload.id}/${path.basename(upload.original_filename || f.originalname || "file")}`;
 
     const row = await createTaskAttachment({
       userId,
       taskId,
       originalName: f.originalname,
-      storedName: f.filename,
+      storedName: upload.id,
       mimeType: f.mimetype,
       sizeBytes: f.size,
       storedPath,
@@ -75,13 +63,8 @@ export async function removeAttachment({ userId, attachmentId }) {
   const deleted = await deleteTaskAttachment({ userId, attachmentId });
   if (!deleted) throw notFound("Attachment not found", "ATTACHMENT_NOT_FOUND");
 
-  // best-effort delete file
-  const abs = path.resolve(UPLOADS_DIR, deleted.stored_path);
-  try {
-    await fs.promises.unlink(abs);
-  } catch {
-    // ignore
-  }
+  const uploadId = String(deleted.stored_path || "").split("/")[1];
+  await deleteUploadedFileById(uploadId);
 
   return { id: deleted.id };
 }

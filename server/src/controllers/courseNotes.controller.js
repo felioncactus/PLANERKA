@@ -5,6 +5,7 @@ import {
   createNoteForCourse,
   updateNoteForUser,
   deleteNoteForUser,
+  uploadNoteImageForUser,
 } from "../services/courseNotes.service.js";
 
 export const listCourseNotesHandler = asyncHandler(async (req, res) => {
@@ -30,4 +31,9 @@ export const updateCourseNoteHandler = asyncHandler(async (req, res) => {
 export const deleteCourseNoteHandler = asyncHandler(async (req, res) => {
   await deleteNoteForUser(req.user.id, req.params.noteId);
   res.status(204).send();
+});
+
+export const uploadNoteImageHandler = asyncHandler(async (req, res) => {
+  const file = await uploadNoteImageForUser(req.user.id, req.params.noteId, req.file);
+  res.status(201).json({ file });
 });

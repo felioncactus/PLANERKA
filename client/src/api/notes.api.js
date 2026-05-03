@@ -23,3 +23,10 @@ export async function apiUpdateNote(noteId, payload) {
 export async function apiDeleteNote(noteId) {
   await http.delete(`/notes/${noteId}`);
 }
+
+export async function apiUploadNoteImage(noteId, file) {
+  const form = new FormData();
+  form.append("image", file);
+  const res = await http.post(`/notes/${noteId}/images`, form);
+  return res.data;
+}

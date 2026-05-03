@@ -15,6 +15,7 @@ import {
 } from "../api/tasks.api";
 import { apiListCourseNotes, apiCreateCourseNote } from "../api/notes.api";
 import { useLanguage } from "../context/LanguageContext";
+import { assetUrl } from "../api/assets";
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
@@ -135,7 +136,7 @@ export default function CourseDetail() {
 
   const headerStyle = useMemo(() => {
     if (!course) return {};
-    const bg = course.banner_url ? `url(${course.banner_url})` : "none";
+    const bg = course.banner_url ? `url(${assetUrl(course.banner_url)})` : "none";
     return {
       height: "clamp(250px, 26vw, 320px)",
       backgroundImage: bg,
@@ -430,7 +431,7 @@ export default function CourseDetail() {
                       }}
                     >
                       {course.image_url ? (
-                        <img src={course.image_url} alt={course.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        <img src={assetUrl(course.image_url)} alt={course.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                       ) : (
                         <span style={{ fontWeight: 900, fontSize: 20, color: "var(--fg)" }}>
                           {(course.name || "?").slice(0, 2).toUpperCase()}
@@ -866,7 +867,7 @@ export default function CourseDetail() {
                   {(imagePreview || course.image_url) ? (
                     <div style={{ display: "grid", gap: 8 }}>
                       <img
-                        src={imagePreview || course.image_url}
+                        src={imagePreview || assetUrl(course.image_url)}
                         alt="Course"
                         style={{ width: 120, height: 120, objectFit: "cover", borderRadius: 14, border: "1px solid #e5e7eb" }}
                       />
@@ -888,7 +889,7 @@ export default function CourseDetail() {
                   {(bannerPreview || course.banner_url) ? (
                     <div style={{ display: "grid", gap: 8 }}>
                       <img
-                        src={bannerPreview || course.banner_url}
+                        src={bannerPreview || assetUrl(course.banner_url)}
                         alt="Banner"
                         style={{ width: "100%", maxWidth: 360, height: 120, objectFit: "cover", borderRadius: 14, border: "1px solid #e5e7eb" }}
                       />

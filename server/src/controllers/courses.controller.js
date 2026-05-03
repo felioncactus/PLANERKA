@@ -1,4 +1,5 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { saveUploadedFile } from "../services/uploadedFiles.service.js";
 import {
   listCourses,
   getCourseForUser,
@@ -7,17 +8,17 @@ import {
   deleteCourseForUser,
 } from "../services/courses.service.js";
 
-function pickUploadedUrls(req) {
+async function pickUploadedUrls(req) {
   const files = req.files || {};
   const image = Array.isArray(files.image) ? files.image[0] : null;
   const banner = Array.isArray(files.banner) ? files.banner[0] : null;
 
-  const imageUrl = image ? `/uploads/courses/${image.filename}` : undefined;
-  const bannerUrl = banner ? `/uploads/courses/${banner.filename}` : undefined;
+  const imageUpload = image ? await saveUploadedFile({ category: "courses", ownerUserId: req.user.id, file: image }) : null;
+  const bannerUpload = banner ? await saveUploadedFile({ category: "courses", ownerUserId: req.user.id, file: banner }) : null;
 
   const out = {};
-  if (imageUrl !== undefined) out.imageUrl = imageUrl;
-  if (bannerUrl !== undefined) out.bannerUrl = bannerUrl;
+  if (imageUpload) out.imageUrl = imageUpload.url;
+  if (bannerUpload) out.bannerUrl = bannerUpload.url;
   return out;
 }
 
@@ -32,13 +33,13 @@ export const getCourseHandler = asyncHandler(async (req, res) => {
 });
 
 export const createCourseHandler = asyncHandler(async (req, res) => {
-  const uploaded = pickUploadedUrls(req);
+  const uploaded = await pickUploadedUrls(req);
   const course = await createCourseForUser(req.user.id, { ...req.body, ...uploaded });
   res.status(201).json({ course });
 });
 
 export const updateCourseHandler = asyncHandler(async (req, res) => {
-  const uploaded = pickUploadedUrls(req);
+  const uploaded = await pickUploadedUrls(req);
   const course = await updateCourseForUser(req.user.id, req.params.id, { ...req.body, ...uploaded });
   res.json({ course });
 });

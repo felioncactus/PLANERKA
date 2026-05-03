@@ -28,6 +28,7 @@ import { askChatBot } from "./chatBot.service.js";
 import { planTasksForParticipants } from "./chatTaskPlanner.service.js";
 import { scheduleChatTimer } from "./chatTimers.service.js";
 import { publishUserEventMany } from "./realtime.service.js";
+import { saveUploadedFile } from "./uploadedFiles.service.js";
 
 function ensureFriendshipForDirect(rel, meId, otherUserId) {
   if (meId === otherUserId) return;
@@ -36,11 +37,12 @@ function ensureFriendshipForDirect(rel, meId, otherUserId) {
   if (rel.status !== "accepted") throw forbidden("Friend request not accepted");
 }
 
-function publicAttachment(file) {
-  const base = path.basename(file.path || file.filename || "");
+async function publicAttachment(meId, file) {
+  const upload = await saveUploadedFile({ category: "chat", ownerUserId: meId, file });
+  const base = path.basename(upload?.original_filename || file.originalname || "file");
   return {
-    file_url: `/uploads/chat/${base}`,
-    storage_path: file.path,
+    file_url: upload?.url || null,
+    storage_path: upload ? `chat/${upload.id}/${base}` : null,
     original_filename: file.originalname || base,
     mime_type: file.mimetype || null,
     size_bytes: file.size || null,
@@ -211,7 +213,7 @@ export async function sendChatMessageForUser(meId, chatId, { body, files = [] })
     },
   });
 
-  const attachments = await addAttachments(message.id, files.map(publicAttachment));
+  const attachments = await addAttachments(message.id, await Promise.all(files.map((file) => publicAttachment(meId, file))));
   const participants = await listParticipantsByChatId(chat.id);
 
   const recipientIds = participants
