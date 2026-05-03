@@ -18,8 +18,13 @@ export default function Login() {
     try {
       await login({ email, password });
       nav("/dashboard", { replace: true });
-    } catch (err) {
-      setError(err?.response?.data?.message || err.message || "Login failed");
+  } catch (err) {
+      const code = err?.response?.data?.error?.code;
+      if (code === "EMAIL_NOT_VERIFIED") {
+        nav(`/verify-email?email=${encodeURIComponent(email)}`);
+        return;
+      }
+      setError(err?.response?.data?.error?.message || err?.response?.data?.message || err.message || "Login failed");
     }
   }
 
@@ -63,7 +68,8 @@ export default function Login() {
           </button>
 
           <div className="small muted auth-footer">
-            No account? <Link to="/register">Register</Link>
+            <Link to="/forgot-password">Forgot password?</Link>
+            <span>No account? <Link to="/register">Register</Link></span>
           </div>
         </form>
       </div>

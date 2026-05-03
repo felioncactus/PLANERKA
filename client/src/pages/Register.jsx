@@ -43,10 +43,14 @@ export default function Register() {
     setError("");
 
     try {
-      await register({ name, email, password, avatarUrl, language });
-      nav("/dashboard", { replace: true });
+      const result = await register({ name, email, password, avatarUrl, language });
+      if (result?.pendingVerification) {
+        nav(`/verify-email?email=${encodeURIComponent(result.email || email)}`, { replace: true });
+      } else {
+        nav("/dashboard", { replace: true });
+      }
     } catch (err) {
-      setError(err?.response?.data?.message || err.message || "Registration failed");
+      setError(err?.response?.data?.error?.message || err?.response?.data?.message || err.message || "Registration failed");
     }
   }
 

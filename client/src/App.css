@@ -2403,6 +2403,50 @@ html[data-theme="light"] .navbar-wrap {
   width: fit-content;
 }
 
+.auth-shell-compact {
+  grid-template-columns: minmax(0, 520px);
+  justify-content: center;
+  padding-inline: 16px;
+}
+
+.auth-card-narrow {
+  width: min(100%, 520px);
+}
+
+.auth-code-input {
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-align: center;
+}
+
+.auth-inline-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.auth-inline-actions .btn {
+  justify-content: center;
+}
+
+@media (max-width: 560px) {
+  .auth-shell-compact {
+    min-height: 100svh;
+    align-content: center;
+    padding: 14px;
+  }
+
+  .auth-card-narrow {
+    padding: 18px;
+    border-radius: 18px;
+  }
+
+  .auth-inline-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
 .friends-page {
   padding: 24px 0 40px;
 }
