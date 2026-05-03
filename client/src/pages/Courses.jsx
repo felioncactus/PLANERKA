@@ -96,10 +96,14 @@ export default function Courses() {
           <>
             {highlighted ? (
               <section className="feature-course card">
-                <div className="feature-course-banner" style={{ backgroundImage: highlighted.banner_url ? `url(${highlighted.banner_url})` : "none" }}>
+                <div className="feature-course-banner" style={{ backgroundImage: highlighted.banner_url ? `url(${assetUrl(highlighted.banner_url)})` : "none" }}>
                   <div className="feature-course-overlay" />
                   <div className="feature-course-content">
-                    <div className="course-dot" style={{ background: highlighted.color || "#94a3b8" }} />
+                    {highlighted.image_url ? (
+                      <img className="feature-course-avatar" src={assetUrl(highlighted.image_url)} alt="" />
+                    ) : (
+                      <div className="course-dot" style={{ background: highlighted.color || "#94a3b8" }} />
+                    )}
                     <div>
                       <div className="eyebrow">Featured course</div>
                       <Link to={`/courses/${highlighted.id}`} className="feature-course-title">
@@ -134,11 +138,12 @@ export default function Courses() {
               {rest.map((course) => {
                 const metaParts = metaForCourse(course, t);
                 const courseInitial = course.name?.slice(0, 1)?.toUpperCase() || "C";
+                const mediaUrl = course.banner_url || course.image_url;
                 return (
                   <article key={course.id} className="course-card card lift">
                     <Link to={`/courses/${course.id}`} className="course-card-media" aria-label={`Open ${course.name}`}>
-                      {course.image_url ? (
-                        <img className="course-card-image" src={assetUrl(course.image_url)} alt={course.name} />
+                      {mediaUrl ? (
+                        <img className="course-card-image" src={assetUrl(mediaUrl)} alt={course.name} />
                       ) : (
                         <div className="course-card-image course-card-image-fallback">
                           <span>{courseInitial}</span>
@@ -147,7 +152,11 @@ export default function Courses() {
 
                       <div className="course-card-media-shade" />
                       <div className="course-card-media-copy">
-                        <span className="course-dot" style={{ background: course.color || "#cbd5e1" }} />
+                        {course.image_url ? (
+                          <img className="course-card-avatar" src={assetUrl(course.image_url)} alt="" />
+                        ) : (
+                          <span className="course-dot" style={{ background: course.color || "#cbd5e1" }} />
+                        )}
                         <span className="course-card-kicker">Course</span>
                       </div>
                     </Link>
