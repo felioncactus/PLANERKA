@@ -11,7 +11,9 @@ import {
   getTaskSummaryByUserId,
 } from "../repositories/tasks.repo.js";
 import { createCalendarBlocksBulk, deleteCalendarBlocksByTaskIds } from "../repositories/calendarBlocks.repo.js";
+import { listTaskAttachments } from "../repositories/taskAttachments.repo.js";
 import { suggestTaskSchedule } from "./taskSuggestions.service.js";
+import { deleteUploadedFilesReferencedBy } from "./uploadedFiles.service.js";
 
 const statusEnum = z.enum(["todo", "doing", "done"]);
 
@@ -267,11 +269,13 @@ export async function updateTaskForUser(userId, taskId, body) {
 }
 
 export async function deleteTaskForUser(userId, taskId) {
+  const attachments = await listTaskAttachments({ userId, taskId });
   await deleteCalendarBlocksByTaskIds(userId, [taskId]);
   const deleted = await deleteTask({ userId, taskId });
   if (!deleted) {
     throw notFound("Task not found", "TASK_NOT_FOUND");
   }
+  await deleteUploadedFilesReferencedBy(attachments.map((attachment) => attachment.stored_path), { ownerUserId: userId });
   return deleted;
 }
 

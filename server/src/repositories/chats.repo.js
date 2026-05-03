@@ -438,6 +438,47 @@ export async function deleteMessageById(messageId) {
   return current;
 }
 
+export async function listAttachmentRefsByMessageId(messageId) {
+  const columns = await getChatAttachmentColumns();
+  const fileUrlExpr = buildAttachmentFileUrlExpression(columns);
+  const storagePathExpr = columns.has("storage_path")
+    ? "a.storage_path"
+    : columns.has("stored_path")
+      ? "a.stored_path"
+      : columns.has("path")
+        ? "a.path"
+        : "NULL";
+
+  const res = await pool.query(
+    `SELECT ${fileUrlExpr} AS file_url, ${storagePathExpr} AS storage_path
+     FROM chat_message_attachments a
+     WHERE a.message_id = $1;`,
+    [messageId]
+  );
+  return res.rows;
+}
+
+export async function listAttachmentRefsByChatId(chatId) {
+  const columns = await getChatAttachmentColumns();
+  const fileUrlExpr = buildAttachmentFileUrlExpression(columns);
+  const storagePathExpr = columns.has("storage_path")
+    ? "a.storage_path"
+    : columns.has("stored_path")
+      ? "a.stored_path"
+      : columns.has("path")
+        ? "a.path"
+        : "NULL";
+
+  const res = await pool.query(
+    `SELECT ${fileUrlExpr} AS file_url, ${storagePathExpr} AS storage_path
+     FROM chat_message_attachments a
+     JOIN chat_messages m ON m.id = a.message_id
+     WHERE m.chat_id = $1;`,
+    [chatId]
+  );
+  return res.rows;
+}
+
 export async function clearChatMessages(chatId) {
   await pool.query(`DELETE FROM chat_messages WHERE chat_id = $1;`, [chatId]);
   const targetTable = await getAttachmentMessageTargetTable();

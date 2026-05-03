@@ -14,6 +14,8 @@ import {
   getMessageById,
   getOrCreateDirectChat,
   isParticipant,
+  listAttachmentRefsByChatId,
+  listAttachmentRefsByMessageId,
   listChatsForUser,
   listMessagesByChatId,
   listParticipantsByChatId,
@@ -28,7 +30,7 @@ import { askChatBot } from "./chatBot.service.js";
 import { planTasksForParticipants } from "./chatTaskPlanner.service.js";
 import { scheduleChatTimer } from "./chatTimers.service.js";
 import { publishUserEventMany } from "./realtime.service.js";
-import { saveUploadedFile } from "./uploadedFiles.service.js";
+import { deleteUploadedFilesReferencedBy, saveUploadedFile } from "./uploadedFiles.service.js";
 
 function ensureFriendshipForDirect(rel, meId, otherUserId) {
   if (meId === otherUserId) return;
@@ -331,13 +333,22 @@ export async function deleteChatMessageForUser(meId, chatId, messageId) {
   if (message.sender_kind !== "user" || message.sender_id !== meId) {
     throw forbidden("You can only delete your own messages");
   }
+  const attachmentRefs = await listAttachmentRefsByMessageId(messageId);
   await deleteMessageById(messageId);
+  await deleteUploadedFilesReferencedBy(
+    attachmentRefs.flatMap((attachment) => [attachment.file_url, attachment.storage_path]),
+    { ownerUserId: meId }
+  );
   return { ok: true };
 }
 
 export async function clearChatForUser(meId, chatId) {
   await getChatDetail(meId, chatId);
+  const attachmentRefs = await listAttachmentRefsByChatId(chatId);
   await clearChatMessages(chatId);
+  await deleteUploadedFilesReferencedBy(
+    attachmentRefs.flatMap((attachment) => [attachment.file_url, attachment.storage_path])
+  );
   return { ok: true };
 }
 
@@ -346,7 +357,11 @@ export async function deleteChatForUser(meId, chatId) {
   if (chat.type === "group" && chat.created_by && chat.created_by !== meId) {
     throw forbidden("Only the group creator can delete this chat");
   }
+  const attachmentRefs = await listAttachmentRefsByChatId(chatId);
   await deleteChatById(chatId);
+  await deleteUploadedFilesReferencedBy(
+    attachmentRefs.flatMap((attachment) => [attachment.file_url, attachment.storage_path])
+  );
   return { ok: true };
 }
 

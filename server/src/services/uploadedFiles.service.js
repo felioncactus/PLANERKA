@@ -1,5 +1,5 @@
 import path from "path";
-import { createUploadedFile, getUploadedFileById } from "../repositories/uploadedFiles.repo.js";
+import { createUploadedFile, deleteUploadedFilesByIds, getUploadedFileById } from "../repositories/uploadedFiles.repo.js";
 import { notFound } from "../utils/httpError.js";
 
 function sanitizeUrlPart(value) {
@@ -31,4 +31,30 @@ export async function getPublicUploadedFile({ category, fileId }) {
   const file = await getUploadedFileById({ category, fileId });
   if (!file) throw notFound("File not found", "FILE_NOT_FOUND");
   return file;
+}
+
+export function extractUploadedFileIds(...values) {
+  const ids = new Set();
+  const uuid = "[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}";
+  const publicUrlPattern = new RegExp(`/uploads/(?:courses|tasks|chat|notes)/(${uuid})(?:/|$)`, "gi");
+  const storedPathPattern = new RegExp(`(?:^|/)(?:courses|tasks|chat|notes)/(${uuid})(?:/|$)`, "gi");
+
+  for (const value of values.flat(Infinity)) {
+    const text = String(value || "");
+    for (const pattern of [publicUrlPattern, storedPathPattern]) {
+      pattern.lastIndex = 0;
+      let match;
+      while ((match = pattern.exec(text))) {
+        ids.add(match[1]);
+      }
+    }
+  }
+
+  return [...ids];
+}
+
+export async function deleteUploadedFilesReferencedBy(values, { ownerUserId = null } = {}) {
+  const fileIds = extractUploadedFileIds(values);
+  if (!fileIds.length) return [];
+  return deleteUploadedFilesByIds({ fileIds, ownerUserId });
 }

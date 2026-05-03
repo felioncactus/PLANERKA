@@ -7,6 +7,8 @@ import {
   updateCourse,
   deleteCourse,
 } from "../repositories/courses.repo.js";
+import { listCourseNotesForCourse } from "../repositories/courseNotes.repo.js";
+import { deleteUploadedFilesReferencedBy } from "./uploadedFiles.service.js";
 
 const emptyToUndefined = (v) => {
   if (v === "" || v === null) return undefined;
@@ -146,6 +148,11 @@ export async function createCourseForUser(userId, input) {
 }
 
 export async function updateCourseForUser(userId, courseId, input) {
+  const existing = await getCourseByIdForUser({ userId, courseId });
+  if (!existing) {
+    throw notFound("Course not found", "COURSE_NOT_FOUND");
+  }
+
   const hasImageUrl = Object.prototype.hasOwnProperty.call(input || {}, "imageUrl") || Object.prototype.hasOwnProperty.call(input || {}, "image_url");
   const hasBannerUrl = Object.prototype.hasOwnProperty.call(input || {}, "bannerUrl") || Object.prototype.hasOwnProperty.call(input || {}, "banner_url");
 
@@ -192,6 +199,11 @@ export async function updateCourseForUser(userId, courseId, input) {
       throw notFound("Course not found", "COURSE_NOT_FOUND");
     }
 
+    const replacedUploads = [];
+    if (hasImageUrl && existing.image_url && existing.image_url !== updated.image_url) replacedUploads.push(existing.image_url);
+    if (hasBannerUrl && existing.banner_url && existing.banner_url !== updated.banner_url) replacedUploads.push(existing.banner_url);
+    await deleteUploadedFilesReferencedBy(replacedUploads, { ownerUserId: userId });
+
     return serializeCourse(updated);
   } catch (err) {
     if (err && err.code === "23505") {
@@ -202,9 +214,19 @@ export async function updateCourseForUser(userId, courseId, input) {
 }
 
 export async function deleteCourseForUser(userId, courseId) {
+  const existing = await getCourseByIdForUser({ userId, courseId });
+  if (!existing) {
+    throw notFound("Course not found", "COURSE_NOT_FOUND");
+  }
+  const notes = await listCourseNotesForCourse({ userId, courseId });
+
   const deleted = await deleteCourse({ userId, courseId });
   if (!deleted) {
     throw notFound("Course not found", "COURSE_NOT_FOUND");
   }
+  await deleteUploadedFilesReferencedBy(
+    [existing.image_url, existing.banner_url, notes.map((note) => note.content_html)],
+    { ownerUserId: userId }
+  );
   return deleted;
 }

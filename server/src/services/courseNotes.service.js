@@ -8,7 +8,7 @@ import {
   updateCourseNote,
   deleteCourseNote,
 } from "../repositories/courseNotes.repo.js";
-import { saveUploadedFile } from "./uploadedFiles.service.js";
+import { deleteUploadedFilesReferencedBy, extractUploadedFileIds, saveUploadedFile } from "./uploadedFiles.service.js";
 
 const createSchema = z.object({
   title: z.string().trim().min(1).max(200),
@@ -68,6 +68,9 @@ export async function createNoteForCourse(userId, courseId, input) {
 }
 
 export async function updateNoteForUser(userId, noteId, input) {
+  const existing = await getCourseNoteByIdForUser({ userId, noteId });
+  if (!existing) throw notFound("Note not found", "NOTE_NOT_FOUND");
+
   const parsed = updateSchema.safeParse({
     title: input?.title,
     contentHtml: input?.contentHtml ?? input?.content_html,
@@ -85,12 +88,22 @@ export async function updateNoteForUser(userId, noteId, input) {
   });
 
   if (!note) throw notFound("Note not found", "NOTE_NOT_FOUND");
+  if (parsed.data.contentHtml !== undefined) {
+    const beforeIds = extractUploadedFileIds(existing.content_html);
+    const afterIds = new Set(extractUploadedFileIds(note.content_html));
+    const removedIds = beforeIds.filter((id) => !afterIds.has(id));
+    await deleteUploadedFilesReferencedBy(removedIds.map((id) => `/uploads/notes/${id}/file`), { ownerUserId: userId });
+  }
   return serializeNote(note);
 }
 
 export async function deleteNoteForUser(userId, noteId) {
+  const existing = await getCourseNoteByIdForUser({ userId, noteId });
+  if (!existing) throw notFound("Note not found", "NOTE_NOT_FOUND");
+
   const deleted = await deleteCourseNote({ userId, noteId });
   if (!deleted) throw notFound("Note not found", "NOTE_NOT_FOUND");
+  await deleteUploadedFilesReferencedBy([existing.content_html], { ownerUserId: userId });
 }
 
 export async function uploadNoteImageForUser(userId, noteId, file) {

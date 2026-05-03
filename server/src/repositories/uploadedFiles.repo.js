@@ -38,3 +38,24 @@ export async function deleteUploadedFileById(fileId) {
   );
   return result.rows[0] || null;
 }
+
+export async function deleteUploadedFilesByIds({ fileIds, ownerUserId = null }) {
+  const ids = [...new Set((fileIds || []).filter(Boolean))];
+  if (!ids.length) return [];
+
+  const params = [ids];
+  let ownerClause = "";
+  if (ownerUserId) {
+    params.push(ownerUserId);
+    ownerClause = ` AND owner_user_id = $2`;
+  }
+
+  const result = await pool.query(
+    `DELETE FROM uploaded_files
+     WHERE id = ANY($1::uuid[])
+     ${ownerClause}
+     RETURNING id;`,
+    params
+  );
+  return result.rows;
+}
