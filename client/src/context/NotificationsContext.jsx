@@ -6,6 +6,7 @@ import { fetchChats } from "../api/chats.api";
 import { apiListCalendarEvents } from "../api/calendar.api";
 import { useAuth } from "./AuthContext";
 import { useLanguage } from "./LanguageContext";
+import { showSystemNotification } from "../utils/systemNotifications";
 
 const NotificationsContext = createContext(null);
 
@@ -49,6 +50,15 @@ function mapUpcomingEventToToast(event, t = (value) => value) {
     tone: event?.meta?.blockType === "activity" ? "info" : "accent",
     sticky: false,
   };
+}
+
+function showSystemForToast(toast) {
+  showSystemNotification({
+    title: toast.title,
+    body: toast.message,
+    url: toast.actionHref || "/dashboard",
+    tag: toast.id,
+  }).catch(() => {});
 }
 
 function mapUnreadChatsToToasts(chats, previousCounts, suppressedChatIds = new Set(), t = (value) => value) {
@@ -158,7 +168,9 @@ export function NotificationsProvider({ children }) {
       const key = toastKeyForEvent(event);
       if (reminderTimersRef.current.has(key)) continue;
       const timer = window.setTimeout(() => {
-        pushToast(mapUpcomingEventToToast(event, t));
+        const toast = mapUpcomingEventToToast(event, t);
+        pushToast(toast);
+        showSystemForToast(toast);
         reminderTimersRef.current.delete(key);
       }, delay);
       reminderTimersRef.current.set(key, timer);
@@ -201,6 +213,12 @@ export function NotificationsProvider({ children }) {
               actionLabel: t("Open chat"),
               actionHref: `/conversations/${data?.chatId}`,
             });
+            showSystemForToast({
+              id: `chat-timer:${data?.messageId}:${data?.endsAt}`,
+              title: t("Group timer finished"),
+              message: data?.title || t("A chat timer has ended"),
+              actionHref: `/conversations/${data?.chatId}`,
+            });
             return;
           }
           if (event === "chat.message") {
@@ -215,7 +233,7 @@ export function NotificationsProvider({ children }) {
             }).catch(() => {});
 
             if (data?.incoming && !isActiveChat) {
-              pushToast({
+              const toast = {
                 id: `live-chat:${incomingChatId}:${data.messageId}`,
                 title: data?.senderName ? `${t("New message from")} ${data.senderName}` : t("New message"),
                 message: data?.preview || data?.title || t("You received a new message"),
@@ -223,7 +241,9 @@ export function NotificationsProvider({ children }) {
                 sticky: true,
                 actionLabel: t("Reply"),
                 actionHref: `/conversations/${incomingChatId}`,
-              });
+              };
+              pushToast(toast);
+              showSystemForToast(toast);
             }
             return;
           }

@@ -3,6 +3,7 @@ import multer from "multer";
 import path from "path";
 import crypto from "crypto";
 import fs from "fs";
+import { isSafeUploadMime } from "../utils/uploads.js";
 
 function ensureDir(p) {
   fs.mkdirSync(p, { recursive: true });
@@ -36,5 +37,9 @@ export const chatAttachmentsUpload = multer({
   limits: {
     files: 5,
     fileSize: 15 * 1024 * 1024,
+  },
+  fileFilter(req, file, cb) {
+    if (!isSafeUploadMime(file)) return cb(new Error("File type is not allowed for attachments"));
+    cb(null, true);
   },
 });

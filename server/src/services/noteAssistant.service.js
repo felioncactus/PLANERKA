@@ -1,8 +1,7 @@
 import { badRequest } from "../utils/httpError.js";
 import { getNoteForUser } from "./courseNotes.service.js";
 import { findUserById } from "../repositories/users.repo.js";
-
-const OPENAI_API_URL = "https://api.openai.com/v1/responses";
+import { assertOpenAIKey, getOpenAIModel, OPENAI_API_URL } from "../config/openai.js";
 
 const LANGUAGE_NAMES = {
   en: "English",
@@ -12,14 +11,8 @@ const LANGUAGE_NAMES = {
   uz: "Uzbek",
 };
 
-function assertOpenAIKey() {
-  if (!process.env.OPENAI_API_KEY) {
-    throw new Error("OPENAI_API_KEY is missing. Add it to server/.env");
-  }
-}
-
 function getModel() {
-  return process.env.OPENAI_MODEL || "gpt-5.2";
+  return getOpenAIModel();
 }
 
 function extractOutputText(response) {

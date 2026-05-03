@@ -1,13 +1,8 @@
 import { createTask } from "../repositories/tasks.repo.js";
-
-const OPENAI_API_URL = "https://api.openai.com/v1/responses";
-
-function assertOpenAIKey() {
-  if (!process.env.OPENAI_API_KEY) throw new Error("OPENAI_API_KEY is missing. Add it to server/.env");
-}
+import { assertOpenAIKey, getOpenAIModel, OPENAI_API_URL } from "../config/openai.js";
 
 function getModel() {
-  return process.env.OPENAI_MODEL || "gpt-5.2";
+  return getOpenAIModel();
 }
 
 function extractOutputText(response) {

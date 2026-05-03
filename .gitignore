@@ -12,7 +12,8 @@ pnpm-debug.log*
 # Environment variables (secrets)
 .env
 .env.*
-.env.example
+!.env.example
+!**/.env.example
 
 # Node
 node_modules/

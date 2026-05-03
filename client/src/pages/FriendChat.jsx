@@ -140,30 +140,8 @@ function endOfDay(dateLike) {
   return date;
 }
 
-function addDays(dateLike, days) {
-  const date = new Date(dateLike);
-  date.setDate(date.getDate() + days);
-  return date;
-}
-
 function clampTime(value, min, max) {
   return new Date(Math.min(Math.max(value, min), max));
-}
-
-function escapeHtml(value = "") {
-  return String(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
-}
-
-function renderCommandHighlightMarkup(value = "") {
-  const escaped = escapeHtml(value);
-  return escaped
-    .replace(/(^|[\s(])((?:\/bot|\/plan))(?=\s|$)/gm, '$1<span class="chat-command-token">$2</span>')
-    .replace(/\n$/g, "\n ");
 }
 
 function formatTaskDueLabel(value) {
@@ -360,7 +338,7 @@ function PollCard({ message, meId, onVoted }) {
 
 function TimerCard({ message }) {
   const timer = message?.metadata?.timer || {};
-  const [now, setNow] = useState(Date.now());
+  const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
     const timerId = window.setInterval(() => setNow(Date.now()), 1000);

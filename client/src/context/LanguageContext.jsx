@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useAuth } from "./AuthContext";
 
 export const LANGUAGES = [
@@ -758,7 +758,9 @@ export function LanguageProvider({ children }) {
   const [language, setLanguageState] = useState(() => localStorage.getItem("language") || "en");
 
   useEffect(() => {
-    if (user?.language) setLanguageState(user.language);
+    if (!user?.language) return undefined;
+    const timer = window.setTimeout(() => setLanguageState(user.language), 0);
+    return () => window.clearTimeout(timer);
   }, [user?.language]);
 
   useEffect(() => {
@@ -767,14 +769,14 @@ export function LanguageProvider({ children }) {
     document.documentElement.dataset.lang = language;
   }, [language]);
 
-  function setLanguage(next) {
+  const setLanguage = useCallback((next) => {
     setLanguageState(next || "en");
-  }
+  }, []);
 
-  function t(value) {
+  const t = useCallback((value) => {
     if (language === "en") return value;
     return getDictionary(language)[normalize(value)] || value;
-  }
+  }, [language]);
 
   useEffect(() => {
     const dictionary = getDictionary(language);
@@ -837,7 +839,7 @@ export function LanguageProvider({ children }) {
     return () => observer.disconnect();
   }, [language]);
 
-  const value = useMemo(() => ({ language, setLanguage, t, languages: LANGUAGES }), [language]);
+  const value = useMemo(() => ({ language, setLanguage, t, languages: LANGUAGES }), [language, setLanguage, t]);
   return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
 }
 

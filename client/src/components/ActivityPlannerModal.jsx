@@ -86,11 +86,11 @@ export default function ActivityPlannerModal({
 
   const presets = useMemo(
     () => [
-      { id: "evening", label: "Evening (18:00â€“22:00)", win: { start: "18:00", end: "22:00" } },
-      { id: "morning", label: "Morning (06:00â€“10:00)", win: { start: "06:00", end: "10:00" } },
-      { id: "afternoon", label: "Afternoon (12:00â€“18:00)", win: { start: "12:00", end: "18:00" } },
-      { id: "day", label: "Day (08:00â€“22:00)", win: { start: "08:00", end: "22:00" } },
-      { id: "custom", label: "Customâ€¦", win: null },
+      { id: "evening", label: "Evening (18:00-22:00)", win: { start: "18:00", end: "22:00" } },
+      { id: "morning", label: "Morning (06:00-10:00)", win: { start: "06:00", end: "10:00" } },
+      { id: "afternoon", label: "Afternoon (12:00-18:00)", win: { start: "12:00", end: "18:00" } },
+      { id: "day", label: "Day (08:00-22:00)", win: { start: "08:00", end: "22:00" } },
+      { id: "custom", label: "Custom...", win: null },
     ],
     []
   );
@@ -212,15 +212,15 @@ export default function ActivityPlannerModal({
             </div>
           </div>
 
-          <button className="btn btn-ghost planner-close-btn" onClick={onClose}>âœ•</button>
+          <button className="btn btn-ghost planner-close-btn" onClick={onClose}>x</button>
         </div>
 
         <div className="planner-grid">
           <div className="planner-calendar">
             <div className="row" style={{ justifyContent: "space-between", alignItems: "center" }}>
-              <button className="btn btn-ghost" onClick={() => setAnchor(new Date(anchor.getFullYear(), anchor.getMonth() - 1, 1))}>â†</button>
+              <button className="btn btn-ghost" onClick={() => setAnchor(new Date(anchor.getFullYear(), anchor.getMonth() - 1, 1))}>{"<"}</button>
               <div style={{ fontWeight: 700 }}>{monthLabel(anchor, language)}</div>
-              <button className="btn btn-ghost" onClick={() => setAnchor(new Date(anchor.getFullYear(), anchor.getMonth() + 1, 1))}>â†’</button>
+              <button className="btn btn-ghost" onClick={() => setAnchor(new Date(anchor.getFullYear(), anchor.getMonth() + 1, 1))}>{">"}</button>
             </div>
 
             <div className="planner-weekdays">
@@ -290,7 +290,7 @@ export default function ActivityPlannerModal({
                       style={{ justifyContent: "space-between" }}
                       title={slot.fits ? "Use this slot" : `Too short (${slot.freeMinutes}m)`}
                     >
-                      <span>{timeLabel(slot.start)}â€“{timeLabel(slot.end)}</span>
+                      <span>{timeLabel(slot.start)}-{timeLabel(slot.end)}</span>
                       <span className="small muted">{slot.freeMinutes}m</span>
                     </button>
                   );
@@ -315,12 +315,12 @@ export default function ActivityPlannerModal({
 
               {aiPlan ? (
                 <div className="planner-ai-plan">
-                  <div className="small"><b>Plan:</b> {aiPlan.mode === "split" ? "Split plan" : "Single block"} â€¢ {aiPlan.totalMinutes} min</div>
+                  <div className="small"><b>Plan:</b> {aiPlan.mode === "split" ? "Split plan" : "Single block"} - {aiPlan.totalMinutes} min</div>
                   {(aiPlan.blocks || []).map((block, index) => (
                     <div key={index} className="small planner-ai-block">
                       <span>{block.label || activityTitle}</span>
                       <span className="planner-ai-time">
-                        {String(block.start).replace("T", " ").slice(0, 16)} â†’ {String(block.end).replace("T", " ").slice(0, 16)}
+                        {String(block.start).replace("T", " ").slice(0, 16)} {"->"} {String(block.end).replace("T", " ").slice(0, 16)}
                       </span>
                     </div>
                   ))}

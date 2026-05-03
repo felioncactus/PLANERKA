@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import Navbar from "../components/Navbar";
 import { useAuth } from "../context/AuthContext";
 import { Link } from "react-router-dom";
-import { apiTaskSummary, apiListTasks } from "../api/tasks.api";
+import { apiTaskSummary } from "../api/tasks.api";
 import { apiListCourses } from "../api/courses.api";
 import { apiListCalendarEvents } from "../api/calendar.api";
 import CalendarWidget, { calendarVisibleRange } from "../components/CalendarWidget";
@@ -17,15 +17,6 @@ function toYmd(date) {
 function fmtTime(t) {
   if (!t) return "";
   return String(t).slice(0, 5);
-}
-
-function startOfWeekMonday(d) {
-  const date = new Date(d);
-  const day = date.getDay();
-  const diff = day === 0 ? -6 : 1 - day;
-  date.setDate(date.getDate() + diff);
-  date.setHours(0, 0, 0, 0);
-  return date;
 }
 
 function monthLabel(date) {
@@ -271,7 +262,6 @@ export default function Dashboard() {
   const { user } = useAuth();
   const [summary, setSummary] = useState(null);
   const [courses, setCourses] = useState([]);
-  const [weekTasks, setWeekTasks] = useState([]);
   const [calendarAnchor, setCalendarAnchor] = useState(() => new Date());
   const [calendarEvents, setCalendarEvents] = useState([]);
   const [calendarLoading, setCalendarLoading] = useState(true);
@@ -286,15 +276,11 @@ export default function Dashboard() {
     async function load() {
       setError("");
       const { gridStart, gridEnd } = calendarVisibleRange(new Date());
-      const start = startOfWeekMonday(new Date());
-      const end = new Date(start);
-      end.setDate(end.getDate() + 6);
 
-      const [summaryResult, coursesResult, calendarResult, tasksResult] = await Promise.allSettled([
+      const [summaryResult, coursesResult, calendarResult] = await Promise.allSettled([
         apiTaskSummary(),
         apiListCourses(),
         apiListCalendarEvents({ start: toYmd(gridStart), end: toYmd(gridEnd) }),
-        apiListTasks({ from: toYmd(start), to: toYmd(end) }),
       ]);
 
       if (cancelled) return;
@@ -315,11 +301,7 @@ export default function Dashboard() {
       if (calendarResult.status === "fulfilled") setCalendarEvents(calendarResult.value.events || []);
       setCalendarLoading(false);
 
-      if (tasksResult.status === "fulfilled") {
-        setWeekTasks((tasksResult.value.tasks || []).filter((x) => x.status !== "done"));
-      }
-
-      const failed = [summaryResult, coursesResult, calendarResult, tasksResult].find(
+      const failed = [summaryResult, coursesResult, calendarResult].find(
         (result) => result.status === "rejected",
       );
       if (failed) {
@@ -342,7 +324,7 @@ export default function Dashboard() {
         const { gridStart, gridEnd } = calendarVisibleRange(calendarAnchor);
         const cal = await apiListCalendarEvents({ start: toYmd(gridStart), end: toYmd(gridEnd) });
         if (!cancelled) setCalendarEvents(cal.events || []);
-      } catch (err) {
+      } catch {
         // Non-fatal; the rest of the dashboard still works.
       } finally {
         if (!cancelled) setCalendarLoading(false);

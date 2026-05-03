@@ -5,6 +5,7 @@ import { apiDeleteMe, apiUpdateMe } from "../api/users.api";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "../context/LanguageContext";
 import { ONBOARDING_TOUR_EVENT, translateOnboardingText } from "../utils/onboardingTour";
+import { disableSystemNotifications, getSystemNotificationSupport, requestSystemNotifications } from "../utils/systemNotifications";
 
 export default function Settings() {
   const { user, logout, updateSession } = useAuth();
@@ -19,6 +20,7 @@ export default function Settings() {
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
+  const [notificationStatus, setNotificationStatus] = useState(() => getSystemNotificationSupport());
 
   useEffect(() => {
     setName(user?.name || "");
@@ -97,6 +99,15 @@ export default function Settings() {
 
   function replayWelcomeTour() {
     window.dispatchEvent(new CustomEvent(ONBOARDING_TOUR_EVENT));
+  }
+
+  async function enableNotifications() {
+    setNotificationStatus(await requestSystemNotifications());
+  }
+
+  function turnOffNotifications() {
+    disableSystemNotifications();
+    setNotificationStatus(getSystemNotificationSupport());
   }
 
   function tourText(value) {
@@ -195,6 +206,37 @@ export default function Settings() {
                     {error}
                   </div>
                 )}
+              </div>
+            </div>
+
+            <hr />
+
+            <div className="row" style={{ justifyContent: "space-between" }}>
+              <div>
+                <div style={{ fontWeight: 650 }}>System notifications</div>
+                <div className="small muted">
+                  Chat messages and task reminders can appear as mobile/browser notifications.
+                </div>
+                <div className="small muted" style={{ marginTop: 4 }}>
+                  {notificationStatus.supported
+                    ? `Status: ${notificationStatus.enabled ? "enabled" : notificationStatus.permission}`
+                    : "This browser does not support system notifications."}
+                </div>
+              </div>
+              <div className="row" style={{ justifyContent: "flex-end" }}>
+                <button
+                  className="btn btn-primary"
+                  type="button"
+                  onClick={enableNotifications}
+                  disabled={!notificationStatus.supported || notificationStatus.enabled}
+                >
+                  {notificationStatus.enabled ? "Enabled" : "Enable"}
+                </button>
+                {notificationStatus.enabled ? (
+                  <button className="btn btn-ghost" type="button" onClick={turnOffNotifications}>
+                    Turn off
+                  </button>
+                ) : null}
               </div>
             </div>
 

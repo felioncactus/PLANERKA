@@ -1,15 +1,17 @@
 
 import { getProductivityStats } from "../repositories/stats.repo.js";
 import { findUserById } from "../repositories/users.repo.js";
+import { getOpenAIModel, OPENAI_API_URL } from "../config/openai.js";
 
-const OPENAI_API_URL = "https://api.openai.com/v1/responses";
+const INSIGHT_CACHE_TTL_MS = 60 * 60 * 1000;
+const insightCache = new Map();
 
 function canUseAi() {
   return !!process.env.OPENAI_API_KEY;
 }
 
 function getModel() {
-  return process.env.OPENAI_MODEL || "gpt-5.2";
+  return getOpenAIModel();
 }
 
 function extractOutputText(response) {
@@ -107,11 +109,7 @@ async function buildAiInsight(stats, language = "en") {
   }
 }
 
-export async function getStatsForUser(userId) {
-  const user = await findUserById(userId);
-  const language = user?.language || "en";
-  const stats = await getProductivityStats(userId);
-
+function buildDerivedStats(stats) {
   const total = Number(stats.taskSummary?.total || 0);
   const done = Number(stats.taskSummary?.done || 0);
   const overdue = Number(stats.taskSummary?.overdue || 0);
@@ -119,15 +117,56 @@ export async function getStatsForUser(userId) {
   const taskMinutes7d = stats.calendarLoad.reduce((sum, day) => sum + Number(day.task_minutes || 0), 0);
   const activityMinutes7d = stats.calendarLoad.reduce((sum, day) => sum + Number(day.activity_minutes || 0), 0);
 
-  const derived = {
+  return {
     completionRate: total > 0 ? Math.round((done / total) * 100) : 0,
     overdueRate: total > 0 ? Math.round((overdue / total) * 100) : 0,
     next7DayLoadMinutes: dueSoon * Number(stats.taskSummary?.avg_open_task_minutes || 0),
     scheduledTaskMinutesLast7Days: taskMinutes7d,
     scheduledActivityMinutesLast7Days: activityMinutes7d,
   };
+}
 
-  const insight = await buildAiInsight({ ...stats, derived }, language);
+function getInsightCacheKey(userId, stats, language) {
+  const snapshot = {
+    language,
+    taskSummary: stats.taskSummary,
+    completionTrend: stats.completionTrend,
+    calendarLoad: stats.calendarLoad,
+    topCourses: stats.topCourses,
+    derived: stats.derived,
+  };
+  return `${userId}:${JSON.stringify(snapshot)}`;
+}
 
-  return { ...stats, derived, insight };
+export async function getStatsForUser(userId) {
+  const user = await findUserById(userId);
+  const language = user?.language || "en";
+  const stats = await getProductivityStats(userId);
+  const derived = buildDerivedStats(stats);
+  const quickInsight = buildFallbackInsight({ ...stats, derived }, language);
+
+  return { ...stats, derived, quickInsight, aiInsightAvailable: canUseAi() };
+}
+
+export async function generateStatsInsightForUser(userId) {
+  const user = await findUserById(userId);
+  const language = user?.language || "en";
+  const baseStats = await getProductivityStats(userId);
+  const stats = { ...baseStats, derived: buildDerivedStats(baseStats) };
+  const cacheKey = getInsightCacheKey(userId, stats, language);
+  const cached = insightCache.get(cacheKey);
+
+  if (cached && cached.expiresAt > Date.now()) {
+    return { insight: cached.insight, source: cached.source, cached: true };
+  }
+
+  const source = canUseAi() ? "openai" : "fallback";
+  const insight = await buildAiInsight(stats, language);
+  insightCache.set(cacheKey, {
+    insight,
+    source,
+    expiresAt: Date.now() + INSIGHT_CACHE_TTL_MS,
+  });
+
+  return { insight, source, cached: false };
 }

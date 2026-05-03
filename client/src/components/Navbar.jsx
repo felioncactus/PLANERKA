@@ -88,7 +88,8 @@ export default function Navbar() {
   const moreDragRef = useRef({ startY: 0, dragging: false });
 
   useEffect(() => {
-    setMoreOpen(false);
+    const timer = window.setTimeout(() => setMoreOpen(false), 0);
+    return () => window.clearTimeout(timer);
   }, [user?.id, location.pathname]);
 
   useEffect(() => {

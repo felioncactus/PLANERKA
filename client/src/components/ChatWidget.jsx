@@ -3,6 +3,17 @@ import { apiAssistantMessage } from "../api/assistant.api";
 import { useAuth } from "../context/AuthContext";
 import { useLanguage } from "../context/LanguageContext";
 
+const ASSISTANT_TOGGLE_EVENT = "planerka:toggle-assistant";
+const ASSISTANT_OPEN_EVENT = "planerka:open-assistant";
+const ENGLISH_WELCOME = [
+  "Hi, I can help you with:",
+  "- adding tasks",
+  "- planning your week",
+  "- checking what is due soon",
+  "",
+  "Try: **Add a 2 hour math task due Friday, then plan my week.**",
+].join("\n");
+
 function escapeHtml(value) {
   return String(value || "")
     .replaceAll("&", "&amp;")
@@ -55,7 +66,8 @@ function MarkdownBubble({ content }) {
 export default function ChatWidget() {
   const { token } = useAuth();
   const { t } = useLanguage();
-  const welcomeContent = t("Study assistant welcome");
+  const translatedWelcome = t("Study assistant welcome");
+  const welcomeContent = translatedWelcome === "Study assistant welcome" ? ENGLISH_WELCOME : translatedWelcome;
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState(() => [
     {

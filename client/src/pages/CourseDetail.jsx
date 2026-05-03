@@ -408,7 +408,7 @@ export default function CourseDetail() {
                   position: "absolute",
                   inset: 0,
                   background: course.banner_url
-                    ? "linear-gradient(180deg, rgba(15,23,42,0.08), rgba(15,23,42,0.62))"
+                    ? "linear-gradient(90deg, rgba(15,23,42,0.46), rgba(15,23,42,0.16) 48%, rgba(15,23,42,0.04)), linear-gradient(180deg, rgba(15,23,42,0.02), rgba(15,23,42,0.42))"
                     : `linear-gradient(135deg, ${course.color || "#2563eb"}22, transparent 55%)`,
                 }}
               />

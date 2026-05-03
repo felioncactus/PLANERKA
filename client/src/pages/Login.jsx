@@ -6,8 +6,8 @@ export default function Login() {
   const { user, login } = useAuth();
   const nav = useNavigate();
 
-  const [email, setEmail] = useState("test@example.com");
-  const [password, setPassword] = useState("Password123!");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
   if (user) return <Navigate to="/dashboard" replace />;

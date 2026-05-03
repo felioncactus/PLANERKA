@@ -1248,13 +1248,76 @@ html[data-theme="light"] .note-editor-alert-success {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+  align-items: center;
 }
 
 .note-editor-toolbar-button {
-  padding: 8px 10px;
+  width: 42px;
+  min-width: 42px;
+  height: 42px;
+  padding: 0;
   border-radius: 10px;
   background: var(--bg-elevated);
   color: var(--fg);
+  display: inline-grid;
+  place-items: center;
+}
+
+.note-editor-icon-button.is-active {
+  border-color: rgba(99, 102, 241, 0.5);
+  background: rgba(99, 102, 241, 0.16);
+}
+
+.note-editor-tool-symbol {
+  font-weight: 850;
+  line-height: 1;
+  font-size: 16px;
+}
+
+.note-editor-tool-symbol.is-italic {
+  font-style: italic;
+}
+
+.note-editor-tool-symbol.is-underline {
+  text-decoration: underline;
+}
+
+.note-editor-tool-symbol.is-quote {
+  font-size: 24px;
+}
+
+.note-editor-toolbar-divider {
+  width: 1px;
+  height: 28px;
+  background: var(--border);
+  margin: 0 2px;
+}
+
+.note-editor-table-tools,
+.note-editor-image-tools {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--bg-elevated) 88%, transparent);
+}
+
+.note-editor-table-tools button,
+.note-editor-image-tools button {
+  min-height: 34px;
+  padding: 6px 9px;
+  border-radius: 9px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.note-editor-image-tools span {
+  min-width: 56px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--muted);
 }
 
 .note-editor-suggestion {
@@ -1335,12 +1398,39 @@ html[data-theme="light"] .note-editor-canvas {
 .note-editor-canvas table {
   width: 100%;
   border-collapse: collapse;
+  margin: 16px 0;
+  table-layout: fixed;
+  background: color-mix(in srgb, var(--card) 72%, transparent);
 }
 
 .note-editor-canvas td,
 .note-editor-canvas th {
   border: 1px solid var(--border);
-  padding: 8px;
+  min-width: 72px;
+  padding: 10px;
+  vertical-align: top;
+}
+
+.note-editor-canvas td:focus,
+.note-editor-canvas th:focus {
+  outline: 2px solid rgba(99, 102, 241, 0.55);
+  outline-offset: -2px;
+}
+
+.note-editor-canvas img.note-editor-image {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 14px 0;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  cursor: pointer;
+}
+
+.note-editor-canvas img.note-editor-image:focus,
+.note-editor-canvas img.note-editor-image:hover {
+  outline: 2px solid rgba(99, 102, 241, 0.55);
+  outline-offset: 3px;
 }
 
 .note-editor-sidebar {
@@ -1680,7 +1770,9 @@ html[data-theme="light"] .note-editor-chat-bubble.is-assistant {
 .feature-course-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, transparent, rgba(2, 6, 23, 0.70));
+  background:
+    linear-gradient(90deg, rgba(2, 6, 23, 0.46) 0%, rgba(2, 6, 23, 0.18) 42%, rgba(2, 6, 23, 0.04) 100%),
+    linear-gradient(180deg, rgba(2, 6, 23, 0.02) 18%, rgba(2, 6, 23, 0.46) 100%);
 }
 
 .feature-course-content,
@@ -2502,12 +2594,14 @@ html[data-theme="light"] .navbar-wrap {
 .assistant-messages {
   overflow: auto;
   display: grid;
+  align-content: start;
   gap: 12px;
   padding: 14px;
 }
 
 .assistant-row {
   display: flex;
+  align-items: flex-start;
   justify-content: flex-start;
 }
 
@@ -11963,8 +12057,8 @@ html[data-theme="light"] .course-hero .eyebrow {
 
 .feature-course-overlay {
   background:
-    linear-gradient(90deg, rgba(2, 6, 23, 0.72) 0%, rgba(2, 6, 23, 0.42) 42%, rgba(2, 6, 23, 0.12) 100%),
-    linear-gradient(180deg, transparent 18%, rgba(2, 6, 23, 0.78) 100%);
+    linear-gradient(90deg, rgba(2, 6, 23, 0.48) 0%, rgba(2, 6, 23, 0.2) 42%, rgba(2, 6, 23, 0.04) 100%),
+    linear-gradient(180deg, rgba(2, 6, 23, 0.02) 18%, rgba(2, 6, 23, 0.5) 100%);
 }
 
 .feature-course-content {
@@ -11996,6 +12090,7 @@ html[data-theme="light"] .course-hero .eyebrow {
   line-height: 0.98;
   letter-spacing: 0;
   text-wrap: balance;
+  text-shadow: 0 2px 12px rgba(2, 6, 23, 0.72);
   overflow-wrap: anywhere;
   text-shadow: 0 3px 16px rgba(2, 6, 23, 0.52);
 }

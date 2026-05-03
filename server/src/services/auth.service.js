@@ -28,6 +28,9 @@ export function signToken(user) {
   if (!process.env.JWT_SECRET) {
     throw new Error("JWT_SECRET is missing in .env");
   }
+  if (process.env.NODE_ENV === "production" && (process.env.JWT_SECRET.length < 32 || /change_me/i.test(process.env.JWT_SECRET))) {
+    throw new Error("JWT_SECRET must be a strong production secret (32+ characters)");
+  }
   const expiresIn = process.env.JWT_EXPIRES_IN || "7d";
   return jwt.sign(
     { email: user.email, name: user.name },

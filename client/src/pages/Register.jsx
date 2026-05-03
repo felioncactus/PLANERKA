@@ -3,18 +3,14 @@ import { Link, Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useLanguage } from "../context/LanguageContext";
 
-function randomEmail() {
-  return `user${Math.floor(Math.random() * 10000)}@example.com`;
-}
-
 export default function Register() {
   const { user, register } = useAuth();
   const { language, setLanguage, languages, t } = useLanguage();
   const nav = useNavigate();
 
-  const [name, setName] = useState("Test User");
-  const [email, setEmail] = useState(randomEmail);
-  const [password, setPassword] = useState("Password123!");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [avatarUrl, setAvatarUrl] = useState(null);
   const [error, setError] = useState("");
 

@@ -108,11 +108,11 @@ export default function TaskPlannerModal({ open, onClose, suggestions, onConfirm
 
   const PRESETS = useMemo(
     () => [
-      { id: "evening", label: "Evening (18:00â€“22:00)", win: { start: "18:00", end: "22:00" } },
-      { id: "morning", label: "Morning (06:00â€“10:00)", win: { start: "06:00", end: "10:00" } },
-      { id: "afternoon", label: "Afternoon (12:00â€“18:00)", win: { start: "12:00", end: "18:00" } },
-      { id: "day", label: "Day (08:00â€“22:00)", win: { start: "08:00", end: "22:00" } },
-      { id: "custom", label: "Customâ€¦", win: null },
+      { id: "evening", label: "Evening (18:00-22:00)", win: { start: "18:00", end: "22:00" } },
+      { id: "morning", label: "Morning (06:00-10:00)", win: { start: "06:00", end: "10:00" } },
+      { id: "afternoon", label: "Afternoon (12:00-18:00)", win: { start: "12:00", end: "18:00" } },
+      { id: "day", label: "Day (08:00-22:00)", win: { start: "08:00", end: "22:00" } },
+      { id: "custom", label: "Custom...", win: null },
     ],
     []
   );
@@ -223,7 +223,7 @@ export default function TaskPlannerModal({ open, onClose, suggestions, onConfirm
 
           </div>
           <button className="btn btn-ghost planner-close-btn" onClick={onClose}>
-            âœ•
+            x
           </button>
         </div>
 
@@ -231,11 +231,11 @@ export default function TaskPlannerModal({ open, onClose, suggestions, onConfirm
           <div className="planner-calendar">
             <div className="row" style={{ justifyContent: "space-between", alignItems: "center" }}>
               <button className="btn btn-ghost" onClick={() => setAnchor(new Date(anchor.getFullYear(), anchor.getMonth() - 1, 1))}>
-                â†
+                {"<"}
               </button>
               <div style={{ fontWeight: 700 }}>{monthLabel(anchor, language)}</div>
               <button className="btn btn-ghost" onClick={() => setAnchor(new Date(anchor.getFullYear(), anchor.getMonth() + 1, 1))}>
-                â†’
+                {">"}
               </button>
             </div>
 
@@ -315,7 +315,7 @@ export default function TaskPlannerModal({ open, onClose, suggestions, onConfirm
                       style={{ justifyContent: "space-between" }}
                     >
                       <span>
-                        {timeLabel(s.start)}â€“{timeLabel(s.end)}
+                        {timeLabel(s.start)}-{timeLabel(s.end)}
                       </span>
                       <span className="small muted">{s.freeMinutes}m</span>
                     </button>
@@ -349,7 +349,7 @@ export default function TaskPlannerModal({ open, onClose, suggestions, onConfirm
               {aiPlan ? (
                 <div className="planner-ai-plan">
                   <div className="small planner-ai-summary">
-                    <b>Plan:</b> {aiPlan.mode === "split" ? "Split into parts" : "Single block"} â€¢ Total {aiPlan.totalMinutes} min
+                    <b>Plan:</b> {aiPlan.mode === "split" ? "Split into parts" : "Single block"} - Total {aiPlan.totalMinutes} min
                   </div>
 
                   <div className="planner-ai-blocks">
@@ -357,7 +357,7 @@ export default function TaskPlannerModal({ open, onClose, suggestions, onConfirm
                       <div key={i} className="small planner-ai-block">
                         <span>{b.label || taskTitle}</span>
                         <span className="planner-ai-time">
-                          {String(b.start).replace("T", " ").slice(0, 16)} â†’ {String(b.end).replace("T", " ").slice(0, 16)} ({b.minutes}m)
+                          {String(b.start).replace("T", " ").slice(0, 16)} {"->"} {String(b.end).replace("T", " ").slice(0, 16)} ({b.minutes}m)
                         </span>
                       </div>
                     ))}

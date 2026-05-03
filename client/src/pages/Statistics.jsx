@@ -1,7 +1,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import Navbar from "../components/Navbar";
-import { apiGetStats } from "../api/stats.api";
+import { apiGenerateStatsInsight, apiGetStats } from "../api/stats.api";
 import { useLanguage } from "../context/LanguageContext";
 
 function StatCard({ label, value, hint }) {
@@ -53,6 +53,10 @@ export default function Statistics() {
   const [stats, setStats] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  const [aiInsight, setAiInsight] = useState("");
+  const [aiInsightMeta, setAiInsightMeta] = useState(null);
+  const [insightError, setInsightError] = useState("");
+  const [insightLoading, setInsightLoading] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -63,6 +67,9 @@ export default function Statistics() {
         const data = await apiGetStats();
         if (!alive) return;
         setStats(data.stats || null);
+        setAiInsight("");
+        setAiInsightMeta(null);
+        setInsightError("");
       } catch (err) {
         if (!alive) return;
         setError(err?.response?.data?.error?.message || "Failed to load statistics");
@@ -80,6 +87,20 @@ export default function Statistics() {
     [stats, t]
   );
 
+  async function handleGenerateInsight() {
+    setInsightLoading(true);
+    setInsightError("");
+    try {
+      const data = await apiGenerateStatsInsight();
+      setAiInsight(data.insight || "");
+      setAiInsightMeta({ source: data.source, cached: data.cached });
+    } catch (err) {
+      setInsightError(err?.response?.data?.error?.message || "Failed to generate AI insight");
+    } finally {
+      setInsightLoading(false);
+    }
+  }
+
   return (
     <>
       <Navbar />
@@ -88,7 +109,7 @@ export default function Statistics() {
           <div>
             <div className="title">Statistics</div>
             <div className="small muted">
-              Useful weekly insight from your tasks, calendar blocks, and AI-generated analysis.
+              Useful weekly insight from your tasks and calendar blocks.
             </div>
           </div>
         </div>
@@ -109,14 +130,26 @@ export default function Statistics() {
               <div className="col-8 card lift accent-edge">
                 <div className="section-head">
                   <div>
-                    <h2 className="section-title">AI insight</h2>
+                    <h2 className="section-title">Insight</h2>
                     <div className="section-sub">What matters most right now</div>
                   </div>
+                  <button className="btn btn-primary" onClick={handleGenerateInsight} disabled={insightLoading}>
+                    {insightLoading ? "Generating..." : aiInsight ? "Refresh AI insight" : "Generate AI insight"}
+                  </button>
                 </div>
                 <div className="notice" style={{ marginTop: 10 }}>
-                  <div style={{ fontWeight: 650, marginBottom: 8 }}>Highlighted insight</div>
-                  <div style={{ fontSize: 16, lineHeight: 1.7 }}>{stats.insight}</div>
+                  <div style={{ fontWeight: 650, marginBottom: 8 }}>
+                    {aiInsight ? "AI insight" : "Quick insight"}
+                  </div>
+                  <div style={{ fontSize: 16, lineHeight: 1.7 }}>{aiInsight || stats.quickInsight}</div>
+                  {aiInsightMeta?.cached ? <div className="small muted" style={{ marginTop: 8 }}>Loaded from recent cache.</div> : null}
+                  {!stats.aiInsightAvailable ? (
+                    <div className="small muted" style={{ marginTop: 8 }}>
+                      OpenAI is not configured, so this uses the free quick insight.
+                    </div>
+                  ) : null}
                 </div>
+                {insightError ? <div className="notice notice-danger" style={{ marginTop: 10 }}>{insightError}</div> : null}
               </div>
 
               <div className="col-4 card lift">

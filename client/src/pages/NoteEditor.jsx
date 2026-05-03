@@ -7,7 +7,7 @@ import { useLanguage } from "../context/LanguageContext";
 
 
 function formatStamp(value) {
-  if (!value) return "â€”";
+  if (!value) return "-";
   const date = new Date(value);
   return new Intl.DateTimeFormat(undefined, {
     year: "numeric",
@@ -26,7 +26,72 @@ function stripAiMarkup(html) {
     const text = doc.createTextNode(el.textContent || "");
     el.replaceWith(text);
   });
+  return sanitizeNoteHtml(doc.body.innerHTML);
+}
+
+function sanitizeNoteHtml(html) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(String(html || ""), "text/html");
+  const allowedTags = new Set([
+    "p", "br", "div", "span", "strong", "b", "em", "i", "u", "s", "code", "pre",
+    "blockquote", "ul", "ol", "li", "h1", "h2", "h3", "h4", "table", "thead", "tbody",
+    "tr", "th", "td", "a", "img",
+  ]);
+  const allowedAttrs = new Set(["href", "target", "rel", "data-ai-added", "style", "src", "alt", "width", "height", "class"]);
+
+  for (const el of Array.from(doc.body.querySelectorAll("*"))) {
+    const tag = el.tagName.toLowerCase();
+    if (!allowedTags.has(tag)) {
+      el.replaceWith(doc.createTextNode(el.textContent || ""));
+      continue;
+    }
+
+    for (const attr of Array.from(el.attributes)) {
+      const name = attr.name.toLowerCase();
+      const value = attr.value || "";
+      const isUnsafeUrl = ["href", "src"].includes(name) && /^\s*javascript:/i.test(value);
+      const isUnsafeStyle = name === "style" && !el.hasAttribute("data-ai-added");
+      const isUnsafeImageSrc = tag === "img" && name === "src" && !isSafeImageSrc(value);
+      const isWrongTagAttr =
+        (name === "src" && tag !== "img") ||
+        (["width", "height", "alt"].includes(name) && tag !== "img") ||
+        (name === "class" && !["img", "table"].includes(tag));
+      if (!allowedAttrs.has(name) || name.startsWith("on") || isUnsafeUrl || isUnsafeStyle || isWrongTagAttr) {
+        el.removeAttribute(attr.name);
+      } else if (isUnsafeImageSrc) {
+        el.remove();
+        break;
+      }
+    }
+
+    if (tag === "a") {
+      el.setAttribute("rel", "noopener noreferrer");
+      if (el.getAttribute("target") === "_blank") el.setAttribute("target", "_blank");
+    }
+
+    if (tag === "img") {
+      el.setAttribute("class", "note-editor-image");
+      el.setAttribute("alt", el.getAttribute("alt") || "Inserted note image");
+      normalizeImageSize(el);
+    }
+
+    if (tag === "table") {
+      el.setAttribute("class", "note-editor-table");
+    }
+  }
+
   return doc.body.innerHTML;
+}
+
+function isSafeImageSrc(value) {
+  const src = String(value || "").trim();
+  return /^data:image\/(png|jpe?g|webp|gif);base64,/i.test(src) || /^https?:\/\//i.test(src);
+}
+
+function normalizeImageSize(img) {
+  const width = Math.min(1200, Math.max(80, Number.parseInt(img.getAttribute("width") || "520", 10) || 520));
+  img.setAttribute("width", String(width));
+  img.removeAttribute("height");
 }
 
 function tokenize(value) {
@@ -80,7 +145,7 @@ function highlightAddedText(previousHtml, nextHtml) {
 }
 
 function ensureEditorHtml(value) {
-  const clean = stripAiMarkup(value);
+  const clean = sanitizeNoteHtml(stripAiMarkup(value));
   return clean && clean.trim() ? clean : "<p></p>";
 }
 
@@ -130,13 +195,55 @@ function buildPrintableNoteHtml({ title, contentHtml }) {
   `;
 }
 
+const TOOLBAR_ITEMS = [
+  { id: "bold", label: "Bold", symbol: "B", command: "bold" },
+  { id: "italic", label: "Italic", symbol: "I", command: "italic" },
+  { id: "underline", label: "Underline", symbol: "U", command: "underline" },
+  { id: "heading", label: "Heading", symbol: "H2", command: "formatBlock", value: "<H2>" },
+  { id: "bullets", label: "Bullets", symbol: "•", command: "insertUnorderedList" },
+  { id: "numbered", label: "Numbered", symbol: "1.", command: "insertOrderedList" },
+  { id: "quote", label: "Quote", symbol: "“", command: "formatBlock", value: "<BLOCKQUOTE>" },
+  { id: "clear", label: "Clear", symbol: "Tx", command: "removeFormat" },
+];
+
+function makeTableHtml(rows = 3, cols = 3) {
+  const body = Array.from({ length: rows }, () => (
+    `<tr>${Array.from({ length: cols }, () => "<td><br></td>").join("")}</tr>`
+  )).join("");
+  return `<table class="note-editor-table"><tbody>${body}</tbody></table><p><br></p>`;
+}
+
+function closestElement(node, selector, root) {
+  const start = node?.nodeType === Node.ELEMENT_NODE ? node : node?.parentElement;
+  const el = start?.closest?.(selector);
+  return el && root?.contains(el) ? el : null;
+}
+
+function readImageFile(file) {
+  return new Promise((resolve, reject) => {
+    if (!file || !/^image\/(png|jpe?g|webp|gif)$/i.test(file.type)) {
+      reject(new Error("Only PNG, JPG, WebP, or GIF images are allowed."));
+      return;
+    }
+    if (file.size > 3_000_000) {
+      reject(new Error("Image is too large. Please use an image under 3MB."));
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ""));
+    reader.onerror = () => reject(new Error("Failed to read image."));
+    reader.readAsDataURL(file);
+  });
+}
 
 export default function NoteEditor() {
   const { t } = useLanguage();
   const { noteId } = useParams();
   const navigate = useNavigate();
   const editorRef = useRef(null);
+  const imageInputRef = useRef(null);
   const saveTimerRef = useRef(null);
+  const selectionRef = useRef(null);
 
   const [note, setNote] = useState(null);
   const [title, setTitle] = useState("");
@@ -159,6 +266,9 @@ export default function NoteEditor() {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [pendingSuggestion, setPendingSuggestion] = useState("");
+  const [formatState, setFormatState] = useState({});
+  const [activeCell, setActiveCell] = useState(null);
+  const [selectedImage, setSelectedImage] = useState(null);
   const assistantWelcome = t("Ask me to improve grammar, fix spelling, write an outline, summarize the lesson, or rewrite sections.");
 
   const canUndo = historyIndex > 0;
@@ -211,6 +321,28 @@ export default function NoteEditor() {
       editorRef.current.innerHTML = contentHtml;
     }
   }, [contentHtml]);
+
+  useEffect(() => {
+    function handleSelectionChange() {
+      const editor = editorRef.current;
+      const selection = window.getSelection();
+      if (!editor || !selection || selection.rangeCount === 0) return;
+      const range = selection.getRangeAt(0);
+      if (!editor.contains(range.commonAncestorContainer)) return;
+      selectionRef.current = range.cloneRange();
+      setFormatState({
+        bold: document.queryCommandState("bold"),
+        italic: document.queryCommandState("italic"),
+        underline: document.queryCommandState("underline"),
+        bullets: document.queryCommandState("insertUnorderedList"),
+        numbered: document.queryCommandState("insertOrderedList"),
+      });
+      setActiveCell(closestElement(selection.anchorNode, "td,th", editor));
+    }
+
+    document.addEventListener("selectionchange", handleSelectionChange);
+    return () => document.removeEventListener("selectionchange", handleSelectionChange);
+  }, []);
 
   function pushHistory(nextHtml) {
     const cleanHtml = ensureEditorHtml(nextHtml);
@@ -270,6 +402,111 @@ export default function NoteEditor() {
     editorRef.current?.focus();
     document.execCommand(command, false, value);
     handleEditorInput();
+  }
+
+  function restoreEditorSelection() {
+    editorRef.current?.focus();
+    const selection = window.getSelection();
+    if (!selection || !selectionRef.current) return;
+    selection.removeAllRanges();
+    selection.addRange(selectionRef.current);
+  }
+
+  function insertEditorHtml(html) {
+    restoreEditorSelection();
+    document.execCommand("insertHTML", false, sanitizeNoteHtml(html));
+    handleEditorInput();
+  }
+
+  function insertTable() {
+    insertEditorHtml(makeTableHtml());
+  }
+
+  async function insertImageFile(file) {
+    try {
+      const src = await readImageFile(file);
+      insertEditorHtml(`<p><img class="note-editor-image" src="${src}" alt="Inserted note image" width="520"></p><p><br></p>`);
+    } catch (err) {
+      setError(err.message || "Failed to insert image");
+    }
+  }
+
+  async function handleImageInput(event) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (file) await insertImageFile(file);
+  }
+
+  async function handleEditorPaste(event) {
+    const imageFile = Array.from(event.clipboardData?.files || []).find((file) => file.type.startsWith("image/"));
+    if (!imageFile) return;
+    event.preventDefault();
+    await insertImageFile(imageFile);
+  }
+
+  function updateSelectedImageWidth(delta) {
+    const editor = editorRef.current;
+    if (!editor || !selectedImage || !editor.contains(selectedImage)) return;
+    const current = Number.parseInt(selectedImage.getAttribute("width") || "520", 10) || selectedImage.clientWidth || 520;
+    const next = Math.min(1200, Math.max(120, current + delta));
+    selectedImage.setAttribute("width", String(next));
+    handleEditorInput();
+  }
+
+  function addTableRow() {
+    if (!activeCell) return;
+    const row = activeCell.closest("tr");
+    const table = activeCell.closest("table");
+    const colCount = row?.children.length || table?.querySelector("tr")?.children.length || 3;
+    const nextRow = document.createElement("tr");
+    for (let i = 0; i < colCount; i += 1) {
+      const cell = document.createElement("td");
+      cell.innerHTML = "<br>";
+      nextRow.appendChild(cell);
+    }
+    row?.after(nextRow);
+    handleEditorInput();
+  }
+
+  function addTableColumn() {
+    if (!activeCell) return;
+    const cellIndex = activeCell.cellIndex;
+    const table = activeCell.closest("table");
+    table?.querySelectorAll("tr").forEach((row) => {
+      const cell = document.createElement(row.children[0]?.tagName?.toLowerCase() === "th" ? "th" : "td");
+      cell.innerHTML = "<br>";
+      row.children[cellIndex]?.after(cell);
+    });
+    handleEditorInput();
+  }
+
+  function deleteTableRow() {
+    if (!activeCell) return;
+    const row = activeCell.closest("tr");
+    const table = activeCell.closest("table");
+    if ((table?.querySelectorAll("tr").length || 0) <= 1) table?.remove();
+    else row?.remove();
+    handleEditorInput();
+  }
+
+  function deleteTableColumn() {
+    if (!activeCell) return;
+    const cellIndex = activeCell.cellIndex;
+    const table = activeCell.closest("table");
+    const rows = Array.from(table?.querySelectorAll("tr") || []);
+    const colCount = rows[0]?.children.length || 0;
+    if (colCount <= 1) {
+      table?.remove();
+    } else {
+      rows.forEach((row) => row.children[cellIndex]?.remove());
+    }
+    handleEditorInput();
+  }
+
+  function handleEditorClick(event) {
+    const image = event.target?.closest?.("img.note-editor-image");
+    setSelectedImage(image && editorRef.current?.contains(image) ? image : null);
+    setActiveCell(closestElement(event.target, "td,th", editorRef.current));
   }
 
   function undo() {
@@ -418,10 +655,10 @@ export default function NoteEditor() {
         <div className="note-editor-topbar">
           <div>
             <div className="note-editor-backlink">
-              <Link to={note ? `/courses/${note.course_id}` : "/courses"}>â† {t("Back to course")}</Link>
+              <Link to={note ? `/courses/${note.course_id}` : "/courses"}>{"<"} {t("Back to course")}</Link>
             </div>
             <div className="note-editor-meta">
-              {note?.course_name || "Course note"} Â· Created {formatStamp(note?.created_at)} Â· Updated {formatStamp(note?.updated_at)}
+              {note?.course_name || "Course note"} - Created {formatStamp(note?.created_at)} - Updated {formatStamp(note?.updated_at)}
             </div>
           </div>
 
@@ -436,8 +673,8 @@ export default function NoteEditor() {
               +
             </button>
             <button type="button" className="note-editor-mobile-assistant-button" onClick={() => { setAssistantOpen(true); setMobileActionsOpen(false); }}>{t("AI assistant")}</button>
-            <button type="button" onClick={undo} disabled={!canUndo}>â†</button>
-            <button type="button" onClick={redo} disabled={!canRedo}>â†’</button>
+            <button type="button" onClick={undo} disabled={!canUndo}>{"<"}</button>
+            <button type="button" onClick={redo} disabled={!canRedo}>{">"}</button>
             <button type="button" onClick={() => saveNote()} disabled={saving}>{saving ? t("Saving...") : t("Save")}</button>
             <button type="button" onClick={exportPdf}>{t("Export PDF")}</button>
             <button type="button" onClick={deleteNote} style={{ color: "crimson" }}>{t("Delete")}</button>
@@ -448,7 +685,7 @@ export default function NoteEditor() {
         {notice ? <div className="note-editor-alert note-editor-alert-success">{notice}</div> : null}
 
         {loading ? (
-          <div>Loadingâ€¦</div>
+          <div>Loading...</div>
         ) : (
           <div className="note-editor-layout">
             {assistantOpen ? (
@@ -478,14 +715,43 @@ export default function NoteEditor() {
                 </button>
 
                 <div className={`note-editor-toolbar${mobileFormatOpen ? " is-open" : ""}`}>
-                  <button type="button" className="note-editor-toolbar-button" onClick={() => runEditorCommand("bold")}>{t("Bold")}</button>
-                  <button type="button" className="note-editor-toolbar-button" onClick={() => runEditorCommand("italic")}>{t("Italic")}</button>
-                  <button type="button" className="note-editor-toolbar-button" onClick={() => runEditorCommand("underline")}>{t("Underline")}</button>
-                  <button type="button" className="note-editor-toolbar-button" onClick={() => runEditorCommand("formatBlock", "<H2>")}>{t("Heading")}</button>
-                  <button type="button" className="note-editor-toolbar-button" onClick={() => runEditorCommand("insertUnorderedList")}>{t("Bullets")}</button>
-                  <button type="button" className="note-editor-toolbar-button" onClick={() => runEditorCommand("insertOrderedList")}>{t("Numbered")}</button>
-                  <button type="button" className="note-editor-toolbar-button" onClick={() => runEditorCommand("formatBlock", "<BLOCKQUOTE>")}>{t("Quote")}</button>
-                  <button type="button" className="note-editor-toolbar-button" onClick={() => runEditorCommand("removeFormat")}>{t("Clear")}</button>
+                  {TOOLBAR_ITEMS.map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      className={`note-editor-toolbar-button note-editor-icon-button${formatState[item.id] ? " is-active" : ""}`}
+                      onClick={() => runEditorCommand(item.command, item.value)}
+                      title={t(item.label)}
+                      aria-label={t(item.label)}
+                    >
+                      <span aria-hidden="true" className={`note-editor-tool-symbol is-${item.id}`}>{item.symbol}</span>
+                    </button>
+                  ))}
+                  <span className="note-editor-toolbar-divider" aria-hidden="true" />
+                  <button type="button" className="note-editor-toolbar-button note-editor-icon-button" onClick={insertTable} title="Insert table" aria-label="Insert table">
+                    <span aria-hidden="true" className="note-editor-tool-symbol">▦</span>
+                  </button>
+                  <button type="button" className="note-editor-toolbar-button note-editor-icon-button" onClick={() => imageInputRef.current?.click()} title="Insert image" aria-label="Insert image">
+                    <span aria-hidden="true" className="note-editor-tool-symbol">▧</span>
+                  </button>
+                  <input ref={imageInputRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={handleImageInput} style={{ display: "none" }} />
+
+                  {activeCell ? (
+                    <div className="note-editor-table-tools" aria-label="Table tools">
+                      <button type="button" onClick={addTableRow} title="Add row">+R</button>
+                      <button type="button" onClick={addTableColumn} title="Add column">+C</button>
+                      <button type="button" onClick={deleteTableRow} title="Delete row">-R</button>
+                      <button type="button" onClick={deleteTableColumn} title="Delete column">-C</button>
+                    </div>
+                  ) : null}
+
+                  {selectedImage ? (
+                    <div className="note-editor-image-tools" aria-label="Image tools">
+                      <button type="button" onClick={() => updateSelectedImageWidth(-80)} title="Make image smaller">-</button>
+                      <span>{selectedImage.getAttribute("width") || selectedImage.clientWidth}px</span>
+                      <button type="button" onClick={() => updateSelectedImageWidth(80)} title="Make image larger">+</button>
+                    </div>
+                  ) : null}
                 </div>
               </div>
 
@@ -511,6 +777,9 @@ export default function NoteEditor() {
                 contentEditable
                 suppressContentEditableWarning
                 onInput={handleEditorInput}
+                onPaste={handleEditorPaste}
+                onClick={handleEditorClick}
+                onKeyUp={(event) => setActiveCell(closestElement(event.target, "td,th", editorRef.current))}
                 className="note-editor-canvas"
               />
             </div>

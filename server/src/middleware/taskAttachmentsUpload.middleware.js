@@ -2,6 +2,7 @@ import multer from "multer";
 import path from "path";
 import crypto from "crypto";
 import fs from "fs";
+import { assertPathInside, isSafeUploadMime, isUuid } from "../utils/uploads.js";
 
 function ensureDir(p) {
   fs.mkdirSync(p, { recursive: true });
@@ -28,7 +29,13 @@ function sanitizeFilename(name) {
 const storage = multer.diskStorage({
   destination(req, file, cb) {
     const taskId = req.params.id;
+    if (!isUuid(taskId)) return cb(new Error("Invalid task id"));
     const dir = path.resolve(TASKS_DIR, taskId);
+    try {
+      assertPathInside(TASKS_DIR, dir);
+    } catch (err) {
+      return cb(err);
+    }
     ensureDir(dir);
     cb(null, dir);
   },
@@ -44,5 +51,9 @@ export const taskAttachmentsUpload = multer({
   limits: {
     fileSize: 20 * 1024 * 1024, // 20MB per file
     files: 10,
+  },
+  fileFilter(req, file, cb) {
+    if (!isSafeUploadMime(file)) return cb(new Error("File type is not allowed for attachments"));
+    cb(null, true);
   },
 });
