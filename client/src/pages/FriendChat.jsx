@@ -442,6 +442,36 @@ function createDefaultPollOptions() {
   return ["Yes", "No"];
 }
 
+function pad2(value) {
+  return String(value).padStart(2, "0");
+}
+
+function toYmd(date) {
+  return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`;
+}
+
+function createDefaultTimerParts() {
+  const next = new Date(Date.now() + 60 * 60 * 1000);
+  next.setMinutes(0, 0, 0);
+  const hour24 = next.getHours();
+  return {
+    date: toYmd(next),
+    hour: String(hour24 % 12 || 12),
+    minute: pad2(next.getMinutes()),
+    period: hour24 >= 12 ? "PM" : "AM",
+  };
+}
+
+function composeLocalDateTime({ date, hour, minute, period }) {
+  if (!date || !hour || !minute || !period) return "";
+  const hourNum = Number(hour);
+  const minuteNum = Number(minute);
+  if (!Number.isInteger(hourNum) || hourNum < 1 || hourNum > 12) return "";
+  if (!Number.isInteger(minuteNum) || minuteNum < 0 || minuteNum > 59) return "";
+  const hour24 = period === "AM" ? (hourNum === 12 ? 0 : hourNum) : (hourNum === 12 ? 12 : hourNum + 12);
+  return `${date}T${pad2(hour24)}:${pad2(minuteNum)}`;
+}
+
 function PollComposer({ question, options, setQuestion, setOptions, validationError, busy, onSubmit }) {
   function updateOption(index, value) {
     setOptions((curr) => curr.map((item, itemIndex) => (itemIndex === index ? value : item)));
@@ -519,7 +549,23 @@ function PollComposer({ question, options, setQuestion, setOptions, validationEr
   );
 }
 
-function TimerComposer({ title, endsAt, setTitle, setEndsAt, validationError, busy, onSubmit }) {
+function TimerComposer({
+  title,
+  endDate,
+  endHour,
+  endMinute,
+  endPeriod,
+  setTitle,
+  setEndDate,
+  setEndHour,
+  setEndMinute,
+  setEndPeriod,
+  validationError,
+  busy,
+  onSubmit,
+}) {
+  const minuteOptions = Array.from({ length: 60 }, (_, index) => pad2(index));
+
   return (
     <div className="chat-action-form">
       <label>
@@ -533,16 +579,50 @@ function TimerComposer({ title, endsAt, setTitle, setEndsAt, validationError, bu
         />
       </label>
 
-      <label>
-        <span className="small">Ends at</span>
-        <input
-          className="input"
-          type="datetime-local"
-          value={endsAt}
-          onChange={(e) => setEndsAt(e.target.value)}
-          disabled={busy}
-        />
-      </label>
+      <div className="chat-timer-fields">
+        <label className="chat-timer-date-field">
+          <span className="small">End date</span>
+          <input
+            className="input"
+            type="date"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+            disabled={busy}
+          />
+        </label>
+
+        <div className="chat-timer-time-fields" aria-label="End time">
+          <label>
+            <span className="small">Hour</span>
+            <select className="input" value={endHour} onChange={(e) => setEndHour(e.target.value)} disabled={busy}>
+              {Array.from({ length: 12 }, (_, index) => String(index + 1)).map((hour) => (
+                <option key={hour} value={hour}>
+                  {hour}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label>
+            <span className="small">Minute</span>
+            <select className="input" value={endMinute} onChange={(e) => setEndMinute(e.target.value)} disabled={busy}>
+              {minuteOptions.map((minute) => (
+                <option key={minute} value={minute}>
+                  {minute}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label>
+            <span className="small">AM/PM</span>
+            <select className="input" value={endPeriod} onChange={(e) => setEndPeriod(e.target.value)} disabled={busy}>
+              <option value="AM">AM</option>
+              <option value="PM">PM</option>
+            </select>
+          </label>
+        </div>
+      </div>
 
       {validationError ? <div className="chat-action-validation">{validationError}</div> : null}
 
@@ -578,7 +658,10 @@ export default function FriendChat() {
   const [pollQuestion, setPollQuestion] = useState("");
   const [pollOptions, setPollOptions] = useState(() => createDefaultPollOptions());
   const [timerTitle, setTimerTitle] = useState("");
-  const [timerEndsAt, setTimerEndsAt] = useState("");
+  const [timerEndDate, setTimerEndDate] = useState(() => createDefaultTimerParts().date);
+  const [timerEndHour, setTimerEndHour] = useState(() => createDefaultTimerParts().hour);
+  const [timerEndMinute, setTimerEndMinute] = useState(() => createDefaultTimerParts().minute);
+  const [timerEndPeriod, setTimerEndPeriod] = useState(() => createDefaultTimerParts().period);
   const [toolMenuOpen, setToolMenuOpen] = useState(false);
   const [toolMenuMode, setToolMenuMode] = useState("poll");
   const [toolValidationError, setToolValidationError] = useState("");
@@ -1052,15 +1135,31 @@ export default function FriendChat() {
 
   async function handleCreateTimer() {
     if (!chat?.id) return;
+    const endsAt = composeLocalDateTime({
+      date: timerEndDate,
+      hour: timerEndHour,
+      minute: timerEndMinute,
+      period: timerEndPeriod,
+    });
+    if (!endsAt) {
+      setToolValidationError("Choose an end date and time.");
+      return;
+    }
+
     try {
       setBusy(true);
       setError("");
-      await createChatTimer(chat.id, { title: timerTitle, endsAt: timerEndsAt || null });
+      setToolValidationError("");
+      await createChatTimer(chat.id, { title: timerTitle, endsAt });
       setTimerTitle("");
-      setTimerEndsAt("");
+      const defaults = createDefaultTimerParts();
+      setTimerEndDate(defaults.date);
+      setTimerEndHour(defaults.hour);
+      setTimerEndMinute(defaults.minute);
+      setTimerEndPeriod(defaults.period);
       await refreshEverything();
     } catch (e) {
-      setError(e?.response?.data?.error?.message || e?.message || "Failed to create timer");
+      setToolValidationError(e?.response?.data?.error?.message || e?.message || "Failed to create timer");
     } finally {
       setBusy(false);
     }
@@ -1531,7 +1630,15 @@ export default function FriendChat() {
                                       <button
                                         type="button"
                                         className={`chat-special-menu-tab${toolMenuMode === "timer" ? " is-active" : ""}`}
-                                        onClick={() => { setToolValidationError(""); setToolMenuMode("timer"); }}
+                                        onClick={() => {
+                                          const defaults = createDefaultTimerParts();
+                                          setToolValidationError("");
+                                          setTimerEndDate((value) => value || defaults.date);
+                                          setTimerEndHour((value) => value || defaults.hour);
+                                          setTimerEndMinute((value) => value || defaults.minute);
+                                          setTimerEndPeriod((value) => value || defaults.period);
+                                          setToolMenuMode("timer");
+                                        }}
                                         role="tab"
                                         aria-selected={toolMenuMode === "timer"}
                                       >
@@ -1553,9 +1660,15 @@ export default function FriendChat() {
                                     ) : (
                                       <TimerComposer
                                         title={timerTitle}
-                                        endsAt={timerEndsAt}
+                                        endDate={timerEndDate}
+                                        endHour={timerEndHour}
+                                        endMinute={timerEndMinute}
+                                        endPeriod={timerEndPeriod}
                                         setTitle={setTimerTitle}
-                                        setEndsAt={setTimerEndsAt}
+                                        setEndDate={setTimerEndDate}
+                                        setEndHour={setTimerEndHour}
+                                        setEndMinute={setTimerEndMinute}
+                                        setEndPeriod={setTimerEndPeriod}
                                         validationError={toolValidationError}
                                         busy={busy}
                                         onSubmit={handleCreateTimer}

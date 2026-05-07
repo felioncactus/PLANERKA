@@ -4968,6 +4968,22 @@ html[data-theme="light"] .navbar-wrap {
   justify-content: center;
 }
 
+.chat-timer-fields {
+  display: grid;
+  gap: 12px;
+}
+
+.chat-timer-time-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(88px, 0.7fr);
+  gap: 10px;
+}
+
+.chat-timer-fields label,
+.chat-timer-time-fields label {
+  min-width: 0;
+}
+
 @media (min-width: 901px) {
   .chat-page-shell.has-chat-open {
     height: calc(100dvh - 76px);
@@ -6989,6 +7005,14 @@ html[data-theme="light"] .navbar-wrap {
     border-radius: 18px;
     padding: 12px 14px;
     font-size: 1rem;
+  }
+
+  .chat-timer-time-fields {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .chat-timer-time-fields label:last-child {
+    grid-column: 1 / -1;
   }
 
   .time-popover-backdrop {
