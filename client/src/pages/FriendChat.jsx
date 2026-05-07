@@ -129,6 +129,17 @@ function formatChatDay(value) {
   return date.toLocaleDateString([], { month: "short", day: "numeric" });
 }
 
+function formatTimerRemaining(ms) {
+  const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  if (hours > 0) {
+    return `${hours}:${pad2(minutes)}:${pad2(seconds)}`;
+  }
+  return `${pad2(minutes)}:${pad2(seconds)}`;
+}
+
 
 function ChatAvatar({ title, type = "direct" }) {
   const icon = type === "group" ? "group" : type === "self" ? "self" : type === "bot" ? "bot" : "message";
@@ -235,8 +246,6 @@ function TimerCard({ message }) {
   const endsAt = new Date(timer.ends_at || 0).getTime();
   const remaining = Math.max(0, endsAt - now);
   const done = !!timer.completed_at || remaining <= 0;
-  const minutes = Math.floor(remaining / 60000);
-  const seconds = Math.floor((remaining % 60000) / 1000);
 
   return (
     <div className="chat-structured-card">
@@ -245,7 +254,7 @@ function TimerCard({ message }) {
         <div>
           <div className="chat-structured-title">{timer.title || message.body}</div>
           <div className="small muted">
-            {done ? "Finished" : `Time left ${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`}
+            {done ? "Finished" : `Time left ${formatTimerRemaining(remaining)}`}
           </div>
         </div>
       </div>
@@ -464,12 +473,16 @@ function createDefaultTimerParts() {
 
 function composeLocalDateTime({ date, hour, minute, period }) {
   if (!date || !hour || !minute || !period) return "";
+  const [year, month, day] = date.split("-").map(Number);
   const hourNum = Number(hour);
   const minuteNum = Number(minute);
+  if (!Number.isInteger(year) || !Number.isInteger(month) || !Number.isInteger(day)) return "";
   if (!Number.isInteger(hourNum) || hourNum < 1 || hourNum > 12) return "";
   if (!Number.isInteger(minuteNum) || minuteNum < 0 || minuteNum > 59) return "";
   const hour24 = period === "AM" ? (hourNum === 12 ? 0 : hourNum) : (hourNum === 12 ? 12 : hourNum + 12);
-  return `${date}T${pad2(hour24)}:${pad2(minuteNum)}`;
+  const localDate = new Date(year, month - 1, day, hour24, minuteNum, 0, 0);
+  if (Number.isNaN(localDate.getTime())) return "";
+  return localDate.toISOString();
 }
 
 function PollComposer({ question, options, setQuestion, setOptions, validationError, busy, onSubmit }) {
