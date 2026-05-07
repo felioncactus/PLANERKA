@@ -4,11 +4,14 @@ import { Link } from "react-router-dom";
 import { fetchFriendNotifications, openNotificationsStream } from "../api/notifications.api";
 import { fetchChats } from "../api/chats.api";
 import { apiListCalendarEvents } from "../api/calendar.api";
+import { apiListTasks } from "../api/tasks.api";
 import { useAuth } from "./AuthContext";
 import { useLanguage } from "./LanguageContext";
 import { showSystemNotification } from "../utils/systemNotifications";
+import { createTaskReminderTimeline } from "../utils/taskReminders";
 
 const NotificationsContext = createContext(null);
+const DELIVERED_TASK_REMINDERS_KEY = "planerka:delivered-task-reminders";
 
 function addDays(date, days) {
   const next = new Date(date);
@@ -61,6 +64,36 @@ function showSystemForToast(toast) {
   }).catch(() => {});
 }
 
+function loadDeliveredTaskReminderIds() {
+  try {
+    const items = JSON.parse(localStorage.getItem(DELIVERED_TASK_REMINDERS_KEY) || "[]");
+    return new Set(Array.isArray(items) ? items.map(String) : []);
+  } catch {
+    return new Set();
+  }
+}
+
+function saveDeliveredTaskReminderIds(ids) {
+  try {
+    localStorage.setItem(DELIVERED_TASK_REMINDERS_KEY, JSON.stringify(Array.from(ids).slice(-500)));
+  } catch {
+    // Storage can be unavailable in private windows.
+  }
+}
+
+function mapTaskReminderToToast(message, t = (value) => value) {
+  const reminder = message?.metadata?.reminder || {};
+  return {
+    id: `task-reminder-toast:${message.id}`,
+    title: t("Task reminder bot"),
+    message: `${reminder.stage_title || t("Task reminder")}: ${reminder.task_title || t("Task")}`,
+    tone: reminder.tone || "accent",
+    sticky: true,
+    actionLabel: t("Open"),
+    actionHref: "/conversations/task-reminders",
+  };
+}
+
 function mapUnreadChatsToToasts(chats, previousCounts, suppressedChatIds = new Set(), t = (value) => value) {
   const items = [];
   for (const chat of chats || []) {
@@ -92,6 +125,8 @@ export function NotificationsProvider({ children }) {
   const seenRef = useRef(new Set());
   const unreadByChatRef = useRef(new Map());
   const reminderTimersRef = useRef(new Map());
+  const deliveredTaskReminderIdsRef = useRef(loadDeliveredTaskReminderIds());
+  const taskReminderSnapshotReadyRef = useRef(false);
   const listenersRef = useRef(new Set());
 
   const emitRealtimeEvent = useCallback((payload) => {
@@ -128,10 +163,11 @@ export function NotificationsProvider({ children }) {
     const rangeStart = toYmd(addDays(now, -1));
     const rangeEnd = toYmd(addDays(now, 2));
 
-    const [friendData, chatsData, calendarData] = await Promise.all([
+    const [friendData, chatsData, calendarData, taskData] = await Promise.all([
       fetchFriendNotifications(),
       fetchChats(),
       apiListCalendarEvents({ start: rangeStart, end: rangeEnd }),
+      apiListTasks(),
     ]);
 
     const chats = chatsData?.chats || [];
@@ -175,6 +211,32 @@ export function NotificationsProvider({ children }) {
       }, delay);
       reminderTimersRef.current.set(key, timer);
     }
+
+    const taskReminderMessages = (taskData?.tasks || [])
+      .flatMap((task) => createTaskReminderTimeline(task))
+      .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+
+    if (!taskReminderSnapshotReadyRef.current) {
+      for (const message of taskReminderMessages) {
+        deliveredTaskReminderIdsRef.current.add(String(message.id));
+      }
+      saveDeliveredTaskReminderIds(deliveredTaskReminderIdsRef.current);
+      taskReminderSnapshotReadyRef.current = true;
+      return;
+    }
+
+    let deliveredChanged = false;
+    for (const message of taskReminderMessages) {
+      const messageId = String(message.id);
+      if (deliveredTaskReminderIdsRef.current.has(messageId)) continue;
+      deliveredTaskReminderIdsRef.current.add(messageId);
+      deliveredChanged = true;
+
+      const toast = mapTaskReminderToToast(message, t);
+      pushToast(toast);
+      showSystemForToast(toast);
+    }
+    if (deliveredChanged) saveDeliveredTaskReminderIds(deliveredTaskReminderIdsRef.current);
   }, [activeChatId, pushToast, t]);
 
   useEffect(() => {
@@ -184,6 +246,8 @@ export function NotificationsProvider({ children }) {
       setActiveChatId(null);
       seenRef.current = new Set();
       unreadByChatRef.current = new Map();
+      deliveredTaskReminderIdsRef.current = loadDeliveredTaskReminderIds();
+      taskReminderSnapshotReadyRef.current = false;
       for (const timer of reminderTimersRef.current.values()) window.clearTimeout(timer);
       reminderTimersRef.current.clear();
       return;
