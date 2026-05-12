@@ -9,6 +9,7 @@ The repository contains a React/Vite frontend and a Node.js/Express API backed b
 - [About](ABOUT.md) - project purpose, goals, target users, and technology stack.
 - [Installation](INSTALLATION.md) - prerequisites, environment setup, database setup, migrations, and run commands.
 - [Features](FEATURES.md) - implemented application features with screenshot placeholders.
+- [Postman Tests](Tests/README.md) - reproducible API, security, and error handling test collection.
 
 ## Repository Structure
 
